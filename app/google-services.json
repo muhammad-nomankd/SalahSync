@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "176850799984",
+    "project_id": "newsflash-j1kvs",
+    "storage_bucket": "newsflash-j1kvs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176850799984:android:5fe6603ab10d058d23d3b5",
+        "android_client_info": {
+          "package_name": "com.durranitech.salahsync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "176850799984-lnfnajd8re25na6gfpal2aanba4ijoml.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZSnjHBeJvDzSkA_hjVj6bSlD7e6VfxCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176850799984-lnfnajd8re25na6gfpal2aanba4ijoml.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

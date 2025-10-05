@@ -3,7 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android") // Hilt plugin
-    kotlin("kapt") // sticking with kapt
+    kotlin("kapt")
+    alias(libs.plugins.google.gms.google.services) // sticking with kapt
 
 }
 
@@ -52,6 +53,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -70,13 +76,18 @@ dependencies {
     // Room (KSP)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
-   // ksp(libs.androidx.room.compiler)
 
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     kapt(libs.androidx.room.compiler)
+
+    //Icons
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
 
 
 

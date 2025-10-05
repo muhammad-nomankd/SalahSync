@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.durranitech.salahsync" />
+                  <option name="mobileSdkAppId" value="1:176850799984:android:5fe6603ab10d058d23d3b5" />
+                  <option name="projectId" value="newsflash-j1kvs" />
+                  <option name="projectNumber" value="176850799984" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
