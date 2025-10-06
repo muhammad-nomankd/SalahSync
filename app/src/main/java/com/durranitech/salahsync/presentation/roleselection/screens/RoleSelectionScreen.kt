@@ -1,4 +1,4 @@
-package com.durranitech.salahsync.presentation.roleselection
+package com.durranitech.salahsync.presentation.roleselection.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.domain.UserRole
+import com.durranitech.salahsync.ui.theme.Light_Green_For_Card
 
 
 @Composable
@@ -54,9 +55,10 @@ fun RoleSelectionScreen(
 ) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(12.dp))
+            .padding(12.dp)
+          ,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Title Section
@@ -97,7 +99,7 @@ fun RoleSelectionScreen(
         Spacer(modifier = Modifier.height(24.dp))
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = Light_Green_For_Card
             ), shape = RoundedCornerShape(12.dp)
         ) {
             Column(

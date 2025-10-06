@@ -12,30 +12,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.R
-import com.durranitech.salahsync.presentation.roleselection.RoleSelectionScreen
-import com.durranitech.salahsync.ui.theme.Dark_Green
-import com.durranitech.salahsync.ui.theme.Light_Green
-import com.durranitech.salahsync.ui.theme.green_text
+import com.durranitech.salahsync.presentation.roleselection.screens.RoleSelectionScreen
+import com.durranitech.salahsync.ui.theme.Text_Light_Green
 
 @Composable
 fun MainAuthScreen(selectedScreen: String, paddingValues: PaddingValues) {
+    val verticalScrol = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(verticalScrol)
             .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(Light_Green, Dark_Green)
-                )
+                MaterialTheme.colorScheme.background
             )
             .padding(paddingValues),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -56,18 +58,37 @@ fun MainAuthScreen(selectedScreen: String, paddingValues: PaddingValues) {
             "SalahSync",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            color = green_text
+            color = Text_Light_Green
         )
         Text(
             "Prayer Time Management for Mosques",
             style = MaterialTheme.typography.labelMedium,
-            color = green_text
+            color = Text_Light_Green
         )
 
         when (selectedScreen) {
             "RoleSelection" -> RoleSelectionScreen(onRoleSelect = {})
         }
 
+        Spacer(Modifier.height(12.dp))
+
+        Box(modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 50.dp), contentAlignment = Alignment.BottomCenter){
+            Text(
+                "Empowering Masajid, strengthening our Ummah",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color =Text_Light_Green.copy(0.6f) ,
+                letterSpacing = 0.2.sp,
+                textAlign = TextAlign.Center
+            )
+        }
 
     }
+}
+
+@Preview
+@Composable
+private fun MainSignInScreenPrev() {
+    MainAuthScreen("RoleSelection", PaddingValues(16.dp))
 }

@@ -9,9 +9,9 @@ sealed interface AuthDestination : NavKey {
     data object RoleSelectionScreen: AuthDestination
 
     @Serializable
-    data object SignInScreen
+    data object SignInScreen: AuthDestination
 
     @Serializable
-    data object SignUpScreen
+    data object SignUpScreen: AuthDestination
 
 }
