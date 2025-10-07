@@ -15,13 +15,15 @@ materialIconsExtended = "1.7.8"
 room = "2.8.1"
 hilt = "2.57.2"
 hiltNavigationCompose = "1.3.0"
-nav3Core = "1.0.0-alpha09"
+nav3Core = "1.0.0-alpha10"
 navigation3Ui = "1.0.0-alpha10"
 lifecycleViewmodelNavigation3 = "2.10.0-alpha04"
 googleGmsGoogleServices = "4.4.3"
 credentials = "1.5.0"
 credentialsPlayServicesAuth = "1.5.0"
 googleid = "1.1.1"
+kotlinSerialization = "2.2.20"
+
 
 [libraries]
 # AndroidX
@@ -81,3 +83,5 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }
+

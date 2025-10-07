@@ -1,6 +1,7 @@
 package com.durranitech.salahsync.presentation.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.durranitech.salahsync.domain.UserRole
 import kotlinx.serialization.Serializable
 
 sealed interface AuthDestination : NavKey {
@@ -9,9 +10,9 @@ sealed interface AuthDestination : NavKey {
     data object RoleSelectionScreen: AuthDestination
 
     @Serializable
-    data object SignInScreen: AuthDestination
+    data class SignInScreen(val role: UserRole? = null): AuthDestination
 
     @Serializable
-    data object SignUpScreen: AuthDestination
+    data class SignUpScreen(val role: UserRole? = null): AuthDestination
 
 }

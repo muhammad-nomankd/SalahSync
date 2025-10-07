@@ -3,11 +3,6 @@ package com.durranitech.salahsync.presentation.navigation
 import SignInScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -15,12 +10,12 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.durranitech.salahsync.domain.UserRole
+import com.durranitech.salahsync.presentation.auth.screens.SignUpScreen
 import com.durranitech.salahsync.presentation.roleselection.screens.RoleSelectionScreen
 
 @Composable
-fun AuthRoute(startDestination: AuthDestination) {
+fun AuthRoute(startDestination: AuthDestination, paddingValues: PaddingValues) {
     val backStack = rememberNavBackStack(startDestination)
-    var userRole by remember { mutableStateOf(UserRole.IMAM) }
     NavDisplay(
         backStack = backStack, onBack = { count ->
             repeat(count) { backStack.removeLastOrNull() }
@@ -29,16 +24,27 @@ fun AuthRoute(startDestination: AuthDestination) {
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ), entryProvider = entryProvider {
-            entry<AuthDestination.RoleSelectionScreen> {
+            entry<AuthDestination.RoleSelectionScreen> { entry ->
                 RoleSelectionScreen(
-                    onRoleSelect = { userRole })
+                    onRoleSelect = { selectedRole ->
+                    backStack.add(AuthDestination.SignInScreen(selectedRole))
+                }, paddingValues)
             }
-            entry<AuthDestination.SignInScreen> {
+            entry<AuthDestination.SignInScreen> { entry ->
                 SignInScreen(
-                    role = UserRole.IMAM,
+                    role = entry.role ?: UserRole.MUQTADI,
                     onBack = { backStack.removeLastOrNull() },
-                    onSwitchToSignUp = { backStack.add(AuthDestination.SignUpScreen) },
-                    PaddingValues(16.dp)
+                    onSwitchToSignUp = { selectedRole -> backStack.add(AuthDestination.SignUpScreen(selectedRole)) }, // ✅ Pass role
+                    paddingValues
+                )
+            }
+
+            entry<AuthDestination.SignUpScreen> { entry ->
+                SignUpScreen(
+                    role = entry.role ?: UserRole.MUQTADI,
+                    onBack = { backStack.removeLastOrNull() },
+                    onSwitchToSignIn = { selectedRole -> backStack.add(AuthDestination.SignInScreen(selectedRole)) }, // ✅ Pass role
+                    paddingValues = paddingValues,
                 )
             }
         })
