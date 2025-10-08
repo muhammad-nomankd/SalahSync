@@ -66,7 +66,8 @@ import com.durranitech.salahsync.ui.theme.Text_Light_Green
 
 @Composable
 fun SignInScreen(
-    role: UserRole, onBack: () -> Unit, onSwitchToSignUp: (UserRole) -> Unit, paddingValues: PaddingValues
+    role: UserRole, onBack: () -> Unit, onSwitchToSignUp: (UserRole) -> Unit, paddingValues: PaddingValues,onSwitchToImamDashboard: () -> Unit,
+    onSwitchToMuqtadiDashboard: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -225,6 +226,7 @@ fun SignInScreen(
                     Spacer(Modifier.height(4.dp))
                     Button(
                         onClick = {
+                            if (role == UserRole.IMAM) onSwitchToImamDashboard() else onSwitchToMuqtadiDashboard()
                             loading = true
                             error = null
                         },
@@ -381,6 +383,7 @@ fun SignInScreen(
 @Composable
 private fun SignInScreenPre() {
     SignInScreen(
-        role = UserRole.IMAM, onBack = {}, onSwitchToSignUp = {}, PaddingValues(16.dp)
+        role = UserRole.IMAM, onBack = {}, onSwitchToSignUp = {}, PaddingValues(16.dp),
+        onSwitchToImamDashboard = {}, onSwitchToMuqtadiDashboard = {}
     )
 }
