@@ -15,4 +15,11 @@ sealed interface AuthDestination : NavKey {
     @Serializable
     data class SignUpScreen(val role: UserRole? = null): AuthDestination
 
+
+    @Serializable
+    data object ImamDashboardScreen: AuthDestination
+
+    @Serializable
+    data object MuqtadiDashboardScreen: AuthDestination
+
 }

@@ -16,7 +16,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             SalahSyncTheme {
                 Scaffold { paddingValues ->
-                    AuthRoute(AuthDestination.RoleSelectionScreen,paddingValues)
+                   AuthRoute(AuthDestination.RoleSelectionScreen,paddingValues)
+                  /*  ImamDashboardScreen(
+                        userName = "Imam Ahmed",
+                        userEmail = "imam@example.com",
+                        onSignOut = { println("Sign out clicked") },
+                        paddingValues = paddingValues
+                    )*/
                 }
 
             }

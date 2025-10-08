@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.durranitech.salahsync.domain.UserRole
+import com.durranitech.salahsync.presentation.imam.ImamDashboardScreen
 import com.durranitech.salahsync.presentation.auth.screens.SignUpScreen
 import com.durranitech.salahsync.presentation.roleselection.screens.RoleSelectionScreen
 
@@ -34,8 +35,10 @@ fun AuthRoute(startDestination: AuthDestination, paddingValues: PaddingValues) {
                 SignInScreen(
                     role = entry.role ?: UserRole.MUQTADI,
                     onBack = { backStack.removeLastOrNull() },
-                    onSwitchToSignUp = { selectedRole -> backStack.add(AuthDestination.SignUpScreen(selectedRole)) }, // ✅ Pass role
-                    paddingValues
+                    onSwitchToSignUp = { selectedRole -> backStack.add(AuthDestination.SignUpScreen(selectedRole)) },
+                    paddingValues,
+                    onSwitchToImamDashboard = {backStack.add(AuthDestination.ImamDashboardScreen)},
+                    onSwitchToMuqtadiDashboard = {backStack.add(AuthDestination.MuqtadiDashboardScreen)}
                 )
             }
 
@@ -43,8 +46,20 @@ fun AuthRoute(startDestination: AuthDestination, paddingValues: PaddingValues) {
                 SignUpScreen(
                     role = entry.role ?: UserRole.MUQTADI,
                     onBack = { backStack.removeLastOrNull() },
-                    onSwitchToSignIn = { selectedRole -> backStack.add(AuthDestination.SignInScreen(selectedRole)) }, // ✅ Pass role
+                    onSwitchToSignIn = { selectedRole -> backStack.add(AuthDestination.SignInScreen(selectedRole)) },
                     paddingValues = paddingValues,
+                )
+            }
+
+            entry<AuthDestination.ImamDashboardScreen> {
+
+            }
+            entry<AuthDestination.MuqtadiDashboardScreen>{
+                ImamDashboardScreen(
+                    userName = "Muhammad Noman",
+                    userEmail = "mnomankd@gmail.com",
+                    onSignOut = { backStack.add(AuthDestination.SignInScreen(UserRole.MUQTADI)) },
+                    paddingValues = paddingValues
                 )
             }
         })
