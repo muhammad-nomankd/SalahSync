@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -152,7 +153,7 @@ fun SignInScreen(
                         ), contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Person,
+                        imageVector = if (role == UserRole.IMAM) Icons.Default.Person else Icons.Default.Groups,
                         contentDescription = "Role Icon",
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(96.dp),
