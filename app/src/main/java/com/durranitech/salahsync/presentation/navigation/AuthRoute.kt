@@ -53,8 +53,9 @@ fun AuthRoute(startDestination: AuthDestination, paddingValues: PaddingValues) {
 
             entry<AuthDestination.ImamDashboardScreen> {
 
+
             }
-            entry<AuthDestination.MuqtadiDashboardScreen>{
+            entry<AuthDestination.ImamDashboardScreen>{
                 ImamDashboardScreen(
                     userName = "Muhammad Noman",
                     userEmail = "mnomankd@gmail.com",

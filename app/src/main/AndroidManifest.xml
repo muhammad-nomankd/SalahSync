@@ -4,6 +4,7 @@
 
     <application
         android:allowBackup="true"
+        android:name=".SalahSyncApplication"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/main_icon"
@@ -14,7 +15,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.SalahSync">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
