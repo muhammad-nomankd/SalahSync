@@ -1,9 +1,23 @@
 package com.durranitech.salahsync.presentation.auth.screens
 
+import android.R.attr.enabled
+import android.R.attr.name
+import android.R.attr.thickness
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
@@ -11,8 +25,24 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -20,6 +50,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -27,16 +59,31 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.durranitech.salahsync.domain.UserRole
-import com.durranitech.salahsync.ui.theme.*
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.durranitech.salahsync.domain.model.UserRole
+import com.durranitech.salahsync.presentation.authentication.AuthIntent
+import com.durranitech.salahsync.presentation.authentication.AuthState
+import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
+import com.durranitech.salahsync.ui.theme.Dark_Green
+import com.durranitech.salahsync.ui.theme.Darker_Indigo
+import com.durranitech.salahsync.ui.theme.Medium_Blue
+import com.durranitech.salahsync.ui.theme.Text_Dark_Green
+import com.durranitech.salahsync.ui.theme.Text_Light_Green
 
 @Composable
 fun SignUpScreen(
     role: UserRole,
     onBack: () -> Unit,
     onSwitchToSignIn: (UserRole) -> Unit,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    onSwitchToImamDashboard: () -> Unit,
+    onSwitchToMuqtadiDashboard: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
+    val state = viewModel.state.collectAsStateWithLifecycle()
+    var loading = state.value.isLoading
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
@@ -46,9 +93,22 @@ fun SignUpScreen(
     var showPassword by remember { mutableStateOf(false) }
     var showConfirmPassword by remember { mutableStateOf(false) }
 
-    var error by remember { mutableStateOf<String?>(null) }
-    var success by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(false) }
+    var error = state.value.error
+    var success = state.value.message
+
+    LaunchedEffect(state.value.isUserAuthenticated) {
+
+            if (role == UserRole.IMAM){
+                if (state.value.isUserAuthenticated == true) {
+                    onSwitchToImamDashboard()
+                }
+            } else if(role == UserRole.MUQTADI){
+                onSwitchToMuqtadiDashboard()
+            }
+
+    }
+
+
 
     val (gradientColors, titleText) = when (role) {
         UserRole.IMAM -> listOf(Medium_Blue, Darker_Indigo) to "Imam Sign Up"
@@ -77,11 +137,9 @@ fun SignUpScreen(
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 12.dp)
                 .background(
-                    MaterialTheme.colorScheme.surfaceContainer,
-                    shape = RoundedCornerShape(12.dp)
+                    MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(12.dp)
                 )
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Back button
             TextButton(onClick = onBack, modifier = Modifier.align(Alignment.Start)) {
@@ -117,9 +175,7 @@ fun SignUpScreen(
                 color = Text_Dark_Green
             )
             Text(
-                "Join the SalahSync community",
-                fontSize = 14.sp,
-                color = Text_Light_Green
+                "Join the SalahSync community", fontSize = 14.sp, color = Text_Light_Green
             )
 
             // Form
@@ -130,7 +186,9 @@ fun SignUpScreen(
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp))
+                            .background(
+                                MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp)
+                            )
                             .padding(8.dp),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -152,26 +210,42 @@ fun SignUpScreen(
                     value = fullName,
                     onValueChange = { fullName = it },
                     label = { Text("Full Name *") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = Text_Light_Green) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Text_Light_Green
+                        )
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Text_Light_Green,
-                        unfocusedBorderColor = Dark_Green
+                        focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                    )
                 )
 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email Address *") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Text_Light_Green) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Email,
+                            contentDescription = null,
+                            tint = Text_Light_Green
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                    ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Text_Light_Green,
-                        unfocusedBorderColor = Dark_Green
+                        focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                     ),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -180,14 +254,22 @@ fun SignUpScreen(
                     value = phone,
                     onValueChange = { phone = it },
                     label = { Text("Phone Number (Optional)") },
-                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = Text_Light_Green) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Phone,
+                            contentDescription = null,
+                            tint = Text_Light_Green
+                        )
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Text_Light_Green,
-                        unfocusedBorderColor = Dark_Green
+                        focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                    )
                 )
 
                 OutlinedTextField(
@@ -207,10 +289,12 @@ fun SignUpScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Text_Light_Green,
-                        unfocusedBorderColor = Dark_Green
+                        focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                    )
                 )
 
                 OutlinedTextField(
@@ -230,23 +314,33 @@ fun SignUpScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Text_Light_Green,
-                        unfocusedBorderColor = Dark_Green
+                        focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Done
+                    )
                 )
 
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = {
+                        val role = role
                         val validationError = validate()
+                        viewModel.onEvent(AuthIntent.SignUp(fullName,phone,email, password,role))
+
+
                         if (validationError != null) {
                             error = validationError
                             return@Button
                         }
                         error = null
-                        loading = true
-                        success = "Account created successfully!"
+
+                        fullName = ""
+                        phone = ""
+                        email = ""
+                        password = ""
+                        confirmPassword = ""
                     },
                     enabled = !loading,
                     modifier = Modifier
@@ -263,8 +357,7 @@ fun SignUpScreen(
                             .background(
                                 brush = Brush.horizontalGradient(gradientColors),
                                 shape = MaterialTheme.shapes.medium
-                            ),
-                        contentAlignment = Alignment.Center
+                            ), contentAlignment = Alignment.Center
                     ) {
                         if (loading) {
                             CircularProgressIndicator(
@@ -291,12 +384,15 @@ fun SignUpScreen(
                 Text(
                     buildAnnotatedString {
                         append("Already have an account?")
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Text_Dark_Green)) {
+                        withStyle(
+                            SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                color = Text_Dark_Green
+                            )
+                        ) {
                             append(" Sign in as ${role.name}")
                         }
-                    },
-                    textAlign = TextAlign.Center,
-                    color = Text_Light_Green
+                    }, textAlign = TextAlign.Center, color = Text_Light_Green
                 )
             }
         }
@@ -321,6 +417,5 @@ fun SignUpScreenPreview() {
         role = UserRole.IMAM,
         onBack = {},
         onSwitchToSignIn = {},
-        paddingValues = PaddingValues(16.dp)
-    )
+        paddingValues = PaddingValues(16.dp), onSwitchToImamDashboard = {}, onSwitchToMuqtadiDashboard = {})
 }

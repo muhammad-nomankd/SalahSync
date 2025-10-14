@@ -1,7 +1,7 @@
 package com.durranitech.salahsync.presentation.navigation
 
 import androidx.navigation3.runtime.NavKey
-import com.durranitech.salahsync.domain.UserRole
+import com.durranitech.salahsync.domain.model.UserRole
 import kotlinx.serialization.Serializable
 
 sealed interface AuthDestination : NavKey {
