@@ -1,4 +1,4 @@
-package com.durranitech.salahsync.domain
+package com.durranitech.salahsync.domain.model
 
 import kotlinx.serialization.Serializable
 

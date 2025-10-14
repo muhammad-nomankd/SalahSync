@@ -1,4 +1,4 @@
-package com.durranitech.salahsync.presentation.imam
+package com.durranitech.salahsync.presentation.imam.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

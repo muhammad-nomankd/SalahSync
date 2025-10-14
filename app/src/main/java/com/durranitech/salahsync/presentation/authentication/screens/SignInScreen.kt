@@ -57,7 +57,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.R
-import com.durranitech.salahsync.domain.UserRole
+import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.ui.theme.Dark_Green
 import com.durranitech.salahsync.ui.theme.Darker_Indigo
 import com.durranitech.salahsync.ui.theme.Light_Green_For_Card

@@ -1,4 +1,4 @@
-package com.durranitech.salahsync.presentation.muqtadi
+package com.durranitech.salahsync.presentation.muqtadi.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
@@ -50,14 +49,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.durranitech.salahsync.presentation.imam.DashboardStat
-import com.durranitech.salahsync.presentation.imam.PrayerTimesCard
-import com.durranitech.salahsync.presentation.imam.QuickActionsCard
+import com.durranitech.salahsync.presentation.imam.screens.PrayerTimesCard
 
 @Composable
 fun MuqtadiDashboard(
@@ -228,7 +227,7 @@ fun QuickStatsSection() {
 
 @Composable
 fun StatCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     value: String,
     tint: Color
@@ -343,7 +342,7 @@ fun QuickActionsSection() {
 }
 
 @Composable
-fun QuickActionCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+fun QuickActionCard(icon: ImageVector, title: String) {
     Card(
         modifier = Modifier,
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF)),
@@ -499,7 +498,7 @@ fun QuoteSection() {
                 "\"The best among you are those who have the best manners and character.\"",
                 textAlign = TextAlign.Center,
                 color = Color(0xFF2563EB),
-                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                fontStyle = FontStyle.Italic
             )
             Text(
                 "- Prophet Muhammad (ﷺ), Sahih al-Bukhari",
