@@ -1,3 +1,4 @@
+import android.R.attr.password
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -37,6 +39,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,25 +59,34 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.durranitech.salahsync.R
 import com.durranitech.salahsync.domain.model.UserRole
+import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
 import com.durranitech.salahsync.ui.theme.Dark_Green
 import com.durranitech.salahsync.ui.theme.Darker_Indigo
 import com.durranitech.salahsync.ui.theme.Light_Green_For_Card
 import com.durranitech.salahsync.ui.theme.Medium_Blue
 import com.durranitech.salahsync.ui.theme.Text_Dark_Green
 import com.durranitech.salahsync.ui.theme.Text_Light_Green
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.text.input.ImeAction
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.durranitech.salahsync.presentation.authentication.AuthIntent
 
 @Composable
 fun SignInScreen(
     role: UserRole, onBack: () -> Unit, onSwitchToSignUp: (UserRole) -> Unit, paddingValues: PaddingValues,onSwitchToImamDashboard: () -> Unit,
-    onSwitchToMuqtadiDashboard: () -> Unit
+    onSwitchToMuqtadiDashboard: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error = viewModel.state.collectAsState().value.error
+    val state = viewModel.state.collectAsStateWithLifecycle()
+    val isLoading = state.value.isLoading
 
     val (gradientColors, titleText) = when (role) {
         UserRole.IMAM -> listOf(
@@ -85,7 +97,15 @@ fun SignInScreen(
             Medium_Blue, Darker_Indigo
         ) to "Muqtadi Sign In"
     }
-
+    LaunchedEffect(state.value) {
+        val currentState = state.value
+        if (currentState.isUserAuthenticated == true && currentState.role != null) {
+            when (currentState.role) {
+                UserRole.IMAM -> onSwitchToImamDashboard()
+                UserRole.MUQTADI -> onSwitchToMuqtadiDashboard()
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -199,8 +219,11 @@ fun SignInScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                         ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next
+                        )
+                        )
 
                     OutlinedTextField(
                         value = password,
@@ -227,11 +250,15 @@ fun SignInScreen(
                     Spacer(Modifier.height(4.dp))
                     Button(
                         onClick = {
-                            if (role == UserRole.IMAM) onSwitchToImamDashboard() else onSwitchToMuqtadiDashboard()
-                            loading = true
+                            if (!email.isNotEmpty() && !password.isNotEmpty()) {
+                                error = "Please fill in all fields"
+                                return@Button
+                            }else{
+                                viewModel.onEvent(AuthIntent.SignIn(email.trim(),password.trim()))
+                            }
                             error = null
                         },
-                        enabled = !loading,
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -251,7 +278,7 @@ fun SignInScreen(
                                     ), shape = MaterialTheme.shapes.medium
                                 ), contentAlignment = Alignment.Center
                         ) {
-                            if (loading) {
+                            if (isLoading) {
                                 CircularProgressIndicator(
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(20.dp),

@@ -6,6 +6,7 @@ import com.durranitech.salahsync.presentation.navigation.AuthDestination
 
 data class AuthState(
     val isLoading: Boolean = false,
+    val success: Boolean = false,
     val user: User? = null,
     val error: String? = null,
     val message: String? = null,

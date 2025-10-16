@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarToday
@@ -56,17 +57,36 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
 import com.durranitech.salahsync.presentation.imam.screens.PrayerTimesCard
 
 @Composable
 fun MuqtadiDashboard(
-    userName: String = "Brother", onSignOut: () -> Unit = {}
+    userName: String = "Brother", onSignOut: () -> Unit = {}, toReleSelectionScreen: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     val gradient = Brush.verticalGradient(
         colors = listOf(Color(0xFFE8F0FE), Color(0xFFE0E7FF))
     )
 
+
+
     Scaffold(topBar = {
+
+    }, floatingActionButton = {
+        IconButton(onClick = {viewModel.signOut()
+            if(viewModel.state.value.isUserAuthenticated == false){
+                toReleSelectionScreen()
+            }else{
+                viewModel.signOut()
+            }
+
+        }
+        ) {
+            Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = "logout",
+                Modifier.size(48.dp), tint = Color.Red)
+        }
     }, content = { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -80,14 +100,25 @@ fun MuqtadiDashboard(
                     columns = GridCells.Fixed(2),
                     contentPadding = PaddingValues(16.dp),
                     modifier = Modifier.heightIn(max = 350.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp
+                    horizontalArrangement = Arrangement.spacedBy(
+                        8.dp
                     )
                 ) {
                     item {
-                        StatCard(Icons.Default.DateRange, "Today's Date", "15 Rajab 1446", Color(0xFF6366F1))
+                        StatCard(
+                            Icons.Default.DateRange,
+                            "Today's Date",
+                            "15 Rajab 1446",
+                            Color(0xFF6366F1)
+                        )
                     }
                     item {
-                        StatCard(Icons.Default.Schedule, "Next Prayer", "Asr - 3:45 PM", Color(0xFF3B82F6))
+                        StatCard(
+                            Icons.Default.Schedule,
+                            "Next Prayer",
+                            "Asr - 3:45 PM",
+                            Color(0xFF3B82F6)
+                        )
 
                     }
                 }
@@ -95,7 +126,7 @@ fun MuqtadiDashboard(
             item {
                 PrayerTimesCard()
             }
-            item{
+            item {
                 QuickActionsCardMuqtadi()
             }
             item {
@@ -127,13 +158,12 @@ fun MuqtadiHeader(userName: String, onSignOut: () -> Unit) {
         }
         IconButton(onClick = onSignOut) {
             Icon(
-                Icons.Default.Logout,
-                contentDescription = "Sign Out",
-                tint = Color(0xFF2563EB)
+                Icons.Default.Logout, contentDescription = "Sign Out", tint = Color(0xFF2563EB)
             )
         }
     })
 }
+
 @Composable
 fun QuickActionsCardMuqtadi() {
     Card(
@@ -227,10 +257,7 @@ fun QuickStatsSection() {
 
 @Composable
 fun StatCard(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    tint: Color
+    icon: ImageVector, label: String, value: String, tint: Color
 ) {
     Card(
         modifier = Modifier
@@ -413,18 +440,10 @@ fun EventsSection() {
         Text("Upcoming Events", color = Color(0xFF1E3A8A), fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(8.dp))
         EventCard(
-            "Jummah Prayer",
-            "Friday",
-            "1:00 PM - 2:00 PM",
-            "Main Prayer Hall",
-            Color(0xFF3B82F6)
+            "Jummah Prayer", "Friday", "1:00 PM - 2:00 PM", "Main Prayer Hall", Color(0xFF3B82F6)
         )
         EventCard(
-            "Quran Study Circle",
-            "Saturday",
-            "After Maghrib",
-            "Study Room",
-            Color(0xFF8B5CF6)
+            "Quran Study Circle", "Saturday", "After Maghrib", "Study Room", Color(0xFF8B5CF6)
         )
         EventCard(
             "Community Iftar",
@@ -516,7 +535,12 @@ fun QuickActionsCard() {
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Quick Actions", color = Color(0xFF065F46), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text(
+                "Quick Actions",
+                color = Color(0xFF065F46),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
             Spacer(Modifier.height(12.dp))
 
             val actions = listOf(
@@ -542,8 +566,7 @@ fun QuickActionsCard() {
                             .clickable { /* Handle click */ }
                             .padding(vertical = 16.dp, horizontal = 8.dp)
                             .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                        contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 icon,
@@ -552,7 +575,12 @@ fun QuickActionsCard() {
                                 modifier = Modifier.size(32.dp)
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text(title, color = tint, fontSize = 14.sp, textAlign = TextAlign.Center)
+                            Text(
+                                title,
+                                color = tint,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }
@@ -570,6 +598,6 @@ fun Color.darken(factor: Float): Color {
 @Preview
 @Composable
 private fun MuqtadiDashbaordPrev() {
-    MuqtadiDashboard("Noman")
+    MuqtadiDashboard("Noman", toReleSelectionScreen = {})
 
 }

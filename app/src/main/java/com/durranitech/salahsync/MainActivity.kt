@@ -5,10 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Scaffold
-import com.durranitech.salahsync.presentation.navigation.AuthDestination
-import com.durranitech.salahsync.presentation.navigation.AuthRoute
+import com.durranitech.salahsync.presentation.navigation.MainRoute
 import com.durranitech.salahsync.ui.theme.SalahSyncTheme
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -19,7 +17,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SalahSyncTheme {
                 Scaffold { paddingValues ->
-                   AuthRoute(paddingValues)
+                   MainRoute(paddingValues)
                 }
 
             }

@@ -64,8 +64,8 @@ fun ImamDashboardScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
             .padding(paddingValues)
+            .fillMaxSize()
             .verticalScroll(scrollState)
             .background(Brush.linearGradient(listOf(Color(0xFFE6F4EA), Color(0xFFD0F0E0))))
     ) {
@@ -511,6 +511,7 @@ fun QuoteOfTheDayCard(
             }
         }
     }
+
 }
 
 
