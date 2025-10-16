@@ -1,7 +1,6 @@
 package com.durranitech.salahsync.presentation.auth.screens
 
 import android.R.attr.enabled
-import android.R.attr.name
 import android.R.attr.thickness
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,13 +21,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,10 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.presentation.authentication.AuthIntent
-import com.durranitech.salahsync.presentation.authentication.AuthState
 import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
 import com.durranitech.salahsync.ui.theme.Dark_Green
 import com.durranitech.salahsync.ui.theme.Darker_Indigo
@@ -83,32 +80,36 @@ fun SignUpScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle()
-    var loading = state.value.isLoading
+    val loading = state.value.isLoading
+
+    // Form fields
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-
     var showPassword by remember { mutableStateOf(false) }
     var showConfirmPassword by remember { mutableStateOf(false) }
 
-    var error = state.value.error
-    var success = state.value.message
+    // Local validation error
+    var localError by remember { mutableStateOf<String?>(null) }
 
+    // Remote errors and success from ViewModel
+    val remoteError = state.value.error
+    val success = state.value.message
+
+    // Display whichever error exists (local validation or remote Firebase error)
+    localError ?: remoteError
+
+    // Navigation after successful signup
     LaunchedEffect(state.value.isUserAuthenticated) {
-
-            if (role == UserRole.IMAM){
-                if (state.value.isUserAuthenticated == true) {
-                    onSwitchToImamDashboard()
-                }
-            } else if(role == UserRole.MUQTADI){
-                onSwitchToMuqtadiDashboard()
+        val currentState = state.value
+        if (currentState.isUserAuthenticated == true && currentState.role != null) {
+            when (currentState.role) {
+                UserRole.IMAM -> onSwitchToImamDashboard()
+                UserRole.MUQTADI -> onSwitchToMuqtadiDashboard()
             }
-
+        }
     }
-
-
 
     val (gradientColors, titleText) = when (role) {
         UserRole.IMAM -> listOf(Medium_Blue, Darker_Indigo) to "Imam Sign Up"
@@ -180,9 +181,9 @@ fun SignUpScreen(
 
             // Form
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (error != null) {
+                if (localError != null) {
                     Text(
-                        text = error!!,
+                        text = localError!!,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -196,7 +197,7 @@ fun SignUpScreen(
 
                 if (success != null) {
                     Text(
-                        text = success!!,
+                        text = success,
                         color = Color(0xFF2E7D32),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -205,6 +206,19 @@ fun SignUpScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+                if (remoteError != null) {
+                    Text(
+                        text = remoteError,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp))
+                            .padding(8.dp),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+
 
                 OutlinedTextField(
                     value = fullName,
@@ -212,9 +226,7 @@ fun SignUpScreen(
                     label = { Text("Full Name *") },
                     leadingIcon = {
                         Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Text_Light_Green
+                            Icons.Default.Person, contentDescription = null, tint = Text_Light_Green
                         )
                     },
                     singleLine = true,
@@ -224,7 +236,7 @@ fun SignUpScreen(
                     ),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
                     )
                 )
 
@@ -234,9 +246,7 @@ fun SignUpScreen(
                     label = { Text("Email Address *") },
                     leadingIcon = {
                         Icon(
-                            Icons.Default.Email,
-                            contentDescription = null,
-                            tint = Text_Light_Green
+                            Icons.Default.Email, contentDescription = null, tint = Text_Light_Green
                         )
                     },
                     keyboardOptions = KeyboardOptions(
@@ -248,28 +258,6 @@ fun SignUpScreen(
                         focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
                     ),
                     shape = RoundedCornerShape(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone Number (Optional)") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Phone,
-                            contentDescription = null,
-                            tint = Text_Light_Green
-                        )
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Text_Light_Green, unfocusedBorderColor = Dark_Green
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
-                    )
                 )
 
                 OutlinedTextField(
@@ -293,7 +281,7 @@ fun SignUpScreen(
                     ),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Password, imeAction = ImeAction.Next
                     )
                 )
 
@@ -318,7 +306,7 @@ fun SignUpScreen(
                     ),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email, imeAction = ImeAction.Done
+                        keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
                     )
                 )
 
@@ -327,20 +315,31 @@ fun SignUpScreen(
                     onClick = {
                         val role = role
                         val validationError = validate()
-                        viewModel.onEvent(AuthIntent.SignUp(fullName,phone,email, password,role))
-
 
                         if (validationError != null) {
-                            error = validationError
+                            localError = validationError
                             return@Button
                         }
-                        error = null
+                        if (password.length < 8){
+                            localError = "Password must be at least 8 characters long"
+                            return@Button
+                        }
+                        if (password != confirmPassword){
+                            localError = "Passwords do not match"
+                            return@Button
+                        }
+                        localError = null
+                        viewModel.onEvent(
+                            AuthIntent.SignUp(
+                                fullName.trim(),
+                                email.trim(),
+                                password.trim(),
+                                role
+                            )
+                        )
 
-                        fullName = ""
-                        phone = ""
-                        email = ""
-                        password = ""
-                        confirmPassword = ""
+
+
                     },
                     enabled = !loading,
                     modifier = Modifier
@@ -374,10 +373,10 @@ fun SignUpScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            Divider(
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp,
-                color = Text_Light_Green.copy(alpha = 0.6f),
-                modifier = Modifier.padding(vertical = 8.dp)
+                color = Text_Light_Green.copy(alpha = 0.6f)
             )
 
             TextButton(onClick = { onSwitchToSignIn(role) }) {
@@ -386,8 +385,7 @@ fun SignUpScreen(
                         append("Already have an account?")
                         withStyle(
                             SpanStyle(
-                                fontWeight = FontWeight.Bold,
-                                color = Text_Dark_Green
+                                fontWeight = FontWeight.Bold, color = Text_Dark_Green
                             )
                         ) {
                             append(" Sign in as ${role.name}")
@@ -417,5 +415,7 @@ fun SignUpScreenPreview() {
         role = UserRole.IMAM,
         onBack = {},
         onSwitchToSignIn = {},
-        paddingValues = PaddingValues(16.dp), onSwitchToImamDashboard = {}, onSwitchToMuqtadiDashboard = {})
+        paddingValues = PaddingValues(16.dp),
+        onSwitchToImamDashboard = {},
+        onSwitchToMuqtadiDashboard = {})
 }

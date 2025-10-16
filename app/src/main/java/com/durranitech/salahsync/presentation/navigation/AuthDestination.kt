@@ -22,4 +22,7 @@ sealed interface AuthDestination : NavKey {
     @Serializable
     data object MuqtadiDashboardScreen: AuthDestination
 
+    @Serializable
+    data object SplashScreen: AuthDestination
+
 }
