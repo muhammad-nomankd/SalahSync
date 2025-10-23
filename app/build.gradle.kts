@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.benchmark.traceprocessor)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -87,15 +88,12 @@ dependencies {
 
     //Icons
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation("androidx.compose.material:material-icons-extended")
+
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
     // Preferences DataStore
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
-    implementation("androidx.datastore:datastore-preferences-core:1.1.7")
-
-
-
-
+    implementation(libs.androidx.datastore.preferences)
 }

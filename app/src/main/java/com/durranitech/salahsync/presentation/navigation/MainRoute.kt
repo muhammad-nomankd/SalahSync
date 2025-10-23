@@ -16,7 +16,7 @@ import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.presentation.auth.screens.SignUpScreen
 import com.durranitech.salahsync.presentation.authentication.screens.SplashScreen
 import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
-import com.durranitech.salahsync.presentation.imam.screens.ImamDashboardScreen
+import com.durranitech.salahsync.presentation.imam.screens.ImamMainDashboard
 import com.durranitech.salahsync.presentation.muqtadi.screens.MuqtadiDashboard
 import com.durranitech.salahsync.presentation.roleselection.screens.RoleSelectionScreen
 
@@ -84,11 +84,11 @@ fun MainRoute(paddingValues: PaddingValues) {
                     backStack.add(AuthDestination.RoleSelectionScreen) })
             }
             entry<AuthDestination.ImamDashboardScreen> {
-                ImamDashboardScreen(
+                ImamMainDashboard(
                     userName = "Noman Khan",
                     userEmail = "mnomankd@gmail.com",
                     onSignOut = { backStack.add(AuthDestination.SignInScreen(UserRole.MUQTADI)) },
-                    paddingValues = paddingValues
+                    paddingValue = paddingValues
                 )
             }
 
