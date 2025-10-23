@@ -1,6 +1,7 @@
 package com.durranitech.salahsync.presentation.imam.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,22 +27,40 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Mosque
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,124 +70,99 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.durranitech.salahsync.presentation.imam.BottomNavigationItem
+import com.durranitech.salahsync.presentation.muqtadi.screens.PrayerTimesCard
+import com.durranitech.salahsync.presentation.muqtadi.screens.QuickActionsCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImamDashboardScreen(
-    userName: String, userEmail: String, onSignOut: () -> Unit = {}, paddingValues: PaddingValues
+fun ImamMainDashboard(
+    userName: String, userEmail: String, onSignOut: () -> Unit = {}, paddingValue: PaddingValues
 ) {
     val scrollState = rememberScrollState()
+    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
+    val items = listOf(
+        BottomNavigationItem(
+        title = "Home",
+        selectedIcon = Icons.Filled.Home,
+        unselectedIcon = Icons.Outlined.Home,
+        hasNews = false,
+        badgeCount = null,
+        onNavigate = {}), BottomNavigationItem(
+        title = "Announcements",
+        selectedIcon = Icons.Filled.Campaign,
+        unselectedIcon = Icons.Outlined.Campaign,
+        hasNews = true,
+        badgeCount = 2,
+        onNavigate = {}), BottomNavigationItem(
+        title = "Masjid",
+        selectedIcon = Icons.Filled.Mosque,
+        unselectedIcon = Icons.Outlined.Mosque,
+        hasNews = false,
+        badgeCount = null,
+        onNavigate = {}), BottomNavigationItem(
+        title = "Members",
+        selectedIcon = Icons.Filled.Group,
+        unselectedIcon = Icons.Outlined.Group,
+        hasNews = true,
+        badgeCount = null,
+        onNavigate = {}))
+    Scaffold(
+        bottomBar = {
+            NavigationBar(
+                windowInsets = NavigationBarDefaults.windowInsets,
+                tonalElevation = 16.dp,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ) {
 
-    Column(
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .background(Brush.linearGradient(listOf(Color(0xFFE6F4EA), Color(0xFFD0F0E0))))
-    ) {
-        /*  // Header
-          TopAppBar(
-              title = {
-                  Column {
-                      Text("SalahSync", color = Color(0xFF065F46), fontSize = 20.sp)
-                      Text("Imam Dashboard", color = Color(0xFF047857), fontSize = 14.sp)
-                  }
-              },
-              navigationIcon = {
-                  Icon(
-                      imageVector = Icons.Default.Star,
-                      contentDescription = null,
-                      tint = Color(0xFF047857),
-                      modifier = Modifier.padding(start = 8.dp)
-                  )
-              },
-              actions = {
-                  Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 8.dp)) {
-                      Text(userName, color = Color(0xFF065F46), fontSize = 14.sp)
-                      Text("Imam", color = Color(0xFF047857), fontSize = 12.sp)
-                  }
-                  IconButton(onClick = onSignOut) {
-                      Icon(Icons.Default.ExitToApp, contentDescription = "Sign Out", tint = Color(0xFF047857))
-                  }
-              },
-              colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White.copy(alpha = 0.9f))
-          )
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        selected = selectedIndex == index, onClick = {
+                        selectedIndex = index
+                    }, icon = {
+                        BadgedBox(badge = {
+                            if (item.badgeCount != null) {
+                                Badge {
+                                    Text(item.badgeCount.toString())
+                                }
+                            } else if (item.hasNews) {
+                                Badge()
+                            }
+                        }) {
+                            Icon(
+                                imageVector = if (index == selectedIndex) item.selectedIcon else item.unselectedIcon,
+                                contentDescription = item.title,
+                                modifier = Modifier.size(if (index == selectedIndex) 28.dp else 24.dp)
+                            )
+                        }
 
-          Spacer(Modifier.height(16.dp))*/
 
-        // Greeting
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Assalamu Alaikum, ${userName.split(" ").firstOrNull() ?: "Brother"}",
-                fontSize = 22.sp,
-                color = Color(0xFF065F46)
-            )
-            Text(
-                "Welcome to your Imam dashboard. Manage your mosque's prayer times and community.",
-                fontSize = 14.sp,
-                color = Color(0xFF047857)
-            )
-        }
+                    }, alwaysShowLabel = true, colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                    )
 
-        Spacer(Modifier.height(16.dp))
-
-        // Quick Stats
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
-            modifier = Modifier.heightIn(max = 350.dp)
-        ) {
-            item {
-                DashboardStat(
-                    icon = Icons.Default.AccessTime, title = "Next Prayer", value = "Asr - 3:45 PM"
-                )
+                }
             }
-            item {
-                DashboardStat(
-                    icon = Icons.Default.CalendarToday,
-                    title = "Today's Date",
-                    value = "15 Rajab 1446"
-                )
-            }
-            item {
-                DashboardStat(
-                    icon = Icons.Default.People, title = "Registered Members", value = "127"
-                )
-            }
-            item {
-                DashboardStat(
-                    icon = Icons.Default.Notifications, title = "Pending Notifications", value = "3"
-                )
-            }
+        }, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+    ) { paddingValues ->
+        when (selectedIndex) {
+            0 -> ImamHomeScreen()
+            1 -> AnnouncementsScreen()
+            2 -> MasjidDetailsScreen()
+
+            3 -> MembersScreen()
         }
-
-        Spacer(Modifier.height(8.dp))
-
-        // Main Features
-        Column(modifier = Modifier.padding(16.dp)) {
-            PrayerTimesCard()
-            Spacer(Modifier.height(16.dp))
-            QuickActionsCard()
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Bottom: Recent Activity and Pending Tasks
-        Column(modifier = Modifier.padding(16.dp)) {
-            RecentActivityCard()
-            Spacer(Modifier.height(16.dp))
-            PendingTasksCard()
-        }
-        QuoteOfTheDayCard(
-            "The best among you are those who have the best manners and characte",
-            "- Prophet Muhammad (ﷺ), Sahih al-Bukhari"
-        )
 
     }
+
+
 }
+
 
 @Composable
 fun DashboardStat(icon: ImageVector, title: String, value: String) {
@@ -247,66 +241,6 @@ fun PrayerTimesCard() {
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun QuickActionsCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Quick Actions",
-                color = Color(0xFF065F46),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(Modifier.height(12.dp))
-
-            val actions = listOf(
-                Triple(Icons.Default.CalendarToday, "Manage Schedule", Color(0xFF10B981)),
-                Triple(Icons.Default.Notifications, "Send Announcement", Color(0xFF3B82F6)),
-                Triple(Icons.Default.Group, "View Members", Color(0xFF8B5CF6)),
-                Triple(Icons.Default.Settings, "Settings", Color(0xFFF97316))
-            )
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.heightIn(max = 250.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(actions.size) { i ->
-                    val (icon, title, tint) = actions[i]
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(tint.copy(alpha = 0.1f))
-                            .border(1.dp, tint.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                            .clickable { /* Hand
-                            le click */
-                            }
-                            .padding(vertical = 16.dp, horizontal = 8.dp)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                icon,
-                                contentDescription = title,
-                                tint = tint,
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                title, color = tint, fontSize = 14.sp, textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
             }
         }
     }
@@ -430,9 +364,7 @@ private val AuthorText = Color.White
 
 @Composable
 fun QuoteOfTheDayCard(
-    quote: String, author: String,
-    // optional: pass custom icon vector resource id (defaults to R.drawable.ic_book_open if available)
-    iconVectorRes: ImageVector = Icons.Default.MenuBook // replace with your drawable; fallback needed in your project
+    quote: String, author: String, iconVectorRes: ImageVector
 ) {
     Card(
         modifier = Modifier
@@ -443,7 +375,6 @@ fun QuoteOfTheDayCard(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         border = BorderStroke(1.dp, BorderColor)
     ) {
-        // Gradient background box (keeps border from Card)
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(18.dp))
@@ -515,6 +446,7 @@ fun QuoteOfTheDayCard(
 }
 
 
+/*
 @Preview
 @Composable
 private fun ImamDashboardPreview() {
@@ -523,8 +455,9 @@ private fun ImamDashboardPreview() {
             userName = "Imam Ahmed",
             userEmail = "imam@example.com",
             onSignOut = { println("Sign out clicked") },
-            paddingValues = PaddingValues(16.dp)
+            paddingValue = PaddingValues(16.dp)
         )
     }
 }
 
+*/
