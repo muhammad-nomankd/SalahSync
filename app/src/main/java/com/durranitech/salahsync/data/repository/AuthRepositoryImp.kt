@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
 class AuthRepositoryImp(
@@ -74,8 +75,7 @@ class AuthRepositoryImp(
                     val userModel = User(
                         id = user.uid,
                         name = user.displayName ?: "",
-                        email = user.email ?: "",
-                        phone = ""
+                        email = user.email ?: ""
                     )
                     trySend(Resource.Success(userModel))
                 }
@@ -158,6 +158,26 @@ class AuthRepositoryImp(
             }
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "Unknown error")
+        }
+    }
+
+    override suspend fun getUserDetails(): Flow<Resource<User>> = flow {
+        emit(Resource.Loading())
+        try {
+            val userId = firebaseAuth.currentUser?.uid ?: throw Exception("User not logged in")
+            val snapshot = firebaseFirestore.collection("users")
+                .document(userId)
+                .get()
+                .await()
+
+            val user = snapshot.toObject(User::class.java)
+            if (user != null) {
+                emit(Resource.Success(user))
+            } else {
+                emit(Resource.Error("User not found"))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Unknown error"))
         }
     }
 

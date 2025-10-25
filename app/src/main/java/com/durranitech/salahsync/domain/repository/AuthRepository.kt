@@ -17,6 +17,8 @@ interface AuthRepository {
 
     suspend fun getCurrentUserId(): Resource<String>
 
+    suspend fun getUserDetails():Flow<Resource<User>>
+
 
 
 }

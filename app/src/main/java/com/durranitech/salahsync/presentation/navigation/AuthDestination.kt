@@ -25,4 +25,7 @@ sealed interface AuthDestination : NavKey {
     @Serializable
     data object SplashScreen: AuthDestination
 
+    @Serializable
+    data object CreateMasjidScreen: AuthDestination
+
 }

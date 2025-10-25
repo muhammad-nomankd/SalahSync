@@ -1,4 +1,3 @@
-import android.R.attr.password
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -72,7 +71,6 @@ import com.durranitech.salahsync.ui.theme.Text_Dark_Green
 import com.durranitech.salahsync.ui.theme.Text_Light_Green
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.input.ImeAction
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.durranitech.salahsync.presentation.authentication.AuthIntent
 
 @Composable
@@ -254,7 +252,7 @@ fun SignInScreen(
                                 error = "Please fill in all fields"
                                 return@Button
                             }else{
-                                viewModel.onEvent(AuthIntent.SignIn(email.trim(),password.trim()))
+                                viewModel.onAuthEvent(AuthIntent.SignIn(email.trim(),password.trim()))
                             }
                             error = null
                         },

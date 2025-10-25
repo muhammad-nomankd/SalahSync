@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.domain.usecase.GetCurrentUserIdUseCase
 import com.durranitech.salahsync.domain.usecase.GetCurrentUserUseCase
+import com.durranitech.salahsync.domain.usecase.GetUserDetailsUseCase
 import com.durranitech.salahsync.domain.usecase.GetUserRoleUseCase
 import com.durranitech.salahsync.domain.usecase.SignInUseCase
 import com.durranitech.salahsync.domain.usecase.SignOutUseCase
@@ -28,16 +29,17 @@ class AuthViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getUserRoleUseCase: GetUserRoleUseCase,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
+    private val getUserDetailsUseCase: GetUserDetailsUseCase,
     private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthState())
     val state = _state.asStateFlow()
 
-    fun onEvent(event: AuthIntent) {
-        when (event) {
-            is AuthIntent.SignUp -> signUp(event.name, event.email, event.password, event.role)
-            is AuthIntent.SignIn -> signIn(event.email, event.password)
+    fun onAuthEvent(intent: AuthIntent) {
+        when (intent) {
+            is AuthIntent.SignUp -> signUp(intent.name, intent.email, intent.password, intent.role)
+            is AuthIntent.SignIn -> signIn(intent.email, intent.password)
             AuthIntent.GetCurrentUser -> getCurrentUser()
             AuthIntent.LogOut -> signOut()
         }
@@ -181,6 +183,30 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+    fun fetchUser() {
+        viewModelScope.launch {
+            getUserDetailsUseCase().collect { result ->
+                when (result) {
+                    is Resource.Loading -> _state.value = _state.value.copy(
+                        isLoading = true,
+                        error = null
+                    )
+
+                    is Resource.Success -> _state.value = _state.value.copy(
+                        isLoading = false,
+                        user = result.data,
+                        error = null
+                    )
+
+                    is Resource.Error -> _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = result.message
+                    )
+                }
+            }
+        }
+    }
+
 
     fun decideStartDestination() {
         viewModelScope.launch {
