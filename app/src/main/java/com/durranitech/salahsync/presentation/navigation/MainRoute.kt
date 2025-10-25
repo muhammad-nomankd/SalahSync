@@ -4,6 +4,7 @@ import SignInScreen
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -16,13 +17,17 @@ import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.presentation.auth.screens.SignUpScreen
 import com.durranitech.salahsync.presentation.authentication.screens.SplashScreen
 import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
+import com.durranitech.salahsync.presentation.imam.ImamIntent
+import com.durranitech.salahsync.presentation.imam.screens.CreateMasjidScreen
 import com.durranitech.salahsync.presentation.imam.screens.ImamMainDashboard
+import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 import com.durranitech.salahsync.presentation.muqtadi.screens.MuqtadiDashboard
 import com.durranitech.salahsync.presentation.roleselection.screens.RoleSelectionScreen
 
 @Composable
 fun MainRoute(paddingValues: PaddingValues) {
     val viewModel: AuthViewModel = viewModel()
+    val imamViewModel: ImamViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
 
     val backStack = rememberNavBackStack(AuthDestination.SplashScreen)
@@ -88,12 +93,18 @@ fun MainRoute(paddingValues: PaddingValues) {
                     userName = "Noman Khan",
                     userEmail = "mnomankd@gmail.com",
                     onSignOut = { backStack.add(AuthDestination.SignInScreen(UserRole.MUQTADI)) },
-                    paddingValue = paddingValues
+                    paddingValue = paddingValues,
+                    onCreateMasjid = { backStack.add(AuthDestination.CreateMasjidScreen) }
                 )
             }
 
             entry<AuthDestination.SplashScreen> {
                 SplashScreen()
+            }
+
+            entry<AuthDestination.CreateMasjidScreen> {
+                CreateMasjidScreen(onBackClick = {backStack.add(AuthDestination.ImamDashboardScreen)}
+                , onCreateMasjidClick = {imamViewModel.onImamEvent(ImamIntent.createMasjid(it))})
             }
         })
 }

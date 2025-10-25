@@ -1,17 +1,14 @@
 package com.durranitech.salahsync.presentation.imam.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -20,23 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mosque
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Home
@@ -73,15 +60,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.presentation.imam.BottomNavigationItem
-import com.durranitech.salahsync.presentation.muqtadi.screens.PrayerTimesCard
-import com.durranitech.salahsync.presentation.muqtadi.screens.QuickActionsCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImamMainDashboard(
-    userName: String, userEmail: String, onSignOut: () -> Unit = {}, paddingValue: PaddingValues
+    userName: String, userEmail: String, onSignOut: () -> Unit = {}, paddingValue: PaddingValues,onCreateMasjid: () -> Unit = {}
 ) {
-    val scrollState = rememberScrollState()
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val items = listOf(
         BottomNavigationItem(
@@ -151,10 +135,9 @@ fun ImamMainDashboard(
         }, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
     ) { paddingValues ->
         when (selectedIndex) {
-            0 -> ImamHomeScreen()
+            0 -> ImamHomeScreen(paddingValues)
             1 -> AnnouncementsScreen()
-            2 -> MasjidDetailsScreen()
-
+            2 -> MasjidScreen(onCreateMasjid = onCreateMasjid)
             3 -> MembersScreen()
         }
 

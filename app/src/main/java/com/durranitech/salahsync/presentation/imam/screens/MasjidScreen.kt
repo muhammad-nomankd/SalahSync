@@ -1,5 +1,6 @@
 package com.durranitech.salahsync.presentation.imam.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -44,70 +46,136 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.durranitech.salahsync.domain.model.Announcement
 import com.durranitech.salahsync.domain.model.Member
+import com.durranitech.salahsync.presentation.imam.components.EmptyMasjidPlaceholder
+import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 
 @Composable
-fun MasjidDetailsScreen(
+fun MasjidScreen(
     modifier: Modifier = Modifier,
     onEditDetails: () -> Unit = {},
     onShareMasjid: () -> Unit = {},
     onViewAllMembers: () -> Unit = {},
     onAddAnnouncement: () -> Unit = {},
-    onManageData: () -> Unit = {}
+    onManageData: () -> Unit = {},
+    viewModel: ImamViewModel = hiltViewModel(),
+    onCreateMasjid: () -> Unit = {}
 ) {
 
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val imamName = state.masjid?.imamName ?:""
+    val imamId = state.masjid?.imamId ?:""
+    val masjidCode = state.masjid?.code ?:""
+    val masjidName = state.masjid?.name?:""
+    val masjidAddress = state.masjid?.address?:""
 
     Scaffold { padding ->
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            // Main Masjid Info Card
-            item {
-                MasjidInfoCard(
-                    onEditDetails = onEditDetails, onCopyCode = { code ->
+        if (state.masjid != null){
+            MasjidDetailsScreenContent(
+                imamName = imamName,
+                imamId = imamId,
+                masjidCode = masjidCode,
+                masjidName = masjidName,
+                masjidAddress = masjidAddress,
+                padding = padding,
+                onEditDetails = onEditDetails,
+                onViewAllMembers = onViewAllMembers,
+                onAddAnnouncement = onAddAnnouncement,
+                onManageData = onManageData,
+                onCreateMasjid = onCreateMasjid
 
-                    })
+            )
+        } else if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+        } else {
+            EmptyMasjidPlaceholder(onCreateMasjid = {onCreateMasjid()})
+        }
+    }
+}
 
-            // Linked Members Section
-            item {
-                LinkedMembersSection(
-                    members = listOf(Member(name = "John Doe", "imam@gmail.com")), onViewAll = onViewAllMembers
-                )
-            }
+@Composable
+fun MasjidDetailsScreenContent(
+    imamName: String,
+    imamId: String,
+    masjidCode: String,
+    masjidName: String,
+    masjidAddress: String,
+    padding: PaddingValues,
+    onEditDetails: () -> Unit = {},
+    onViewAllMembers: () -> Unit = {},
+    onAddAnnouncement: () -> Unit = {},
+    onManageData: () -> Unit = {},
+    onCreateMasjid: () -> Unit = {}
+) {
 
-            // Past Announcements Section
-            item {
-                PastAnnouncementsSection(
-                    announcements = listOf(Announcement(
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 16.dp)
+    ) {
+        // Main Masjid Info Card
+        item {
+            MasjidInfoCard(
+                imamName,imamId,masjidCode,masjidName,masjidAddress,
+                onEditDetails = onEditDetails, onCopyCode = { code ->
+                    clipboardManager.setText(AnnotatedString(code))
+                    Toast.makeText(context, "Copied to clipboard $code", Toast.LENGTH_SHORT).show()
+
+                })
+        }
+
+        // Linked Members Section
+        item {
+            LinkedMembersSection(
+                members = listOf(Member(name = "John Doe", "imam@gmail.com")),
+                onViewAll = onViewAllMembers
+            )
+        }
+
+        // Past Announcements Section
+        item {
+            PastAnnouncementsSection(
+                announcements = listOf(
+                    Announcement(
                         id = "123456",
                         title = "Eid Al-Fitr Announcement",
                         description = "Eid Al-Fitr will be celebrated on June 15th. Please join us for special prayers and festivities.",
-                        timestamp = System.currentTimeMillis()
-                    ))
+                        date = System.currentTimeMillis().toString()
+                    )
                 )
-            }
+            )
+        }
 
-            // Action Buttons
-            item {
-                ActionButtons(
-                    onAddAnnouncement = onAddAnnouncement, onManageData = onManageData
-                )
-            }
+        // Action Buttons
+        item {
+            ActionButtons(
+                onAddAnnouncement = onAddAnnouncement, onManageData = onManageData
+            )
         }
     }
 }
@@ -146,7 +214,7 @@ private fun MasjidDetailsTopBar(
 }
 
 @Composable
-private fun MasjidInfoCard(
+private fun MasjidInfoCard(imamName: String,imamId: String,masjidCode: String,masjidName: String, masjidAddress: String,
     onEditDetails: () -> Unit, onCopyCode: (String) -> Unit
 ) {
     Card(
@@ -166,7 +234,7 @@ private fun MasjidInfoCard(
         ) {
             // Masjid Name
             Text(
-                text = "Makki Masjid",
+                text = masjidName ,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -186,7 +254,7 @@ private fun MasjidInfoCard(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "Akora khattak Nowshera",
+                    text = masjidAddress,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -196,7 +264,7 @@ private fun MasjidInfoCard(
 
             // Imam
             Text(
-                text = "Imam: Ahmad Ali",
+                text = imamName,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
@@ -227,7 +295,7 @@ private fun MasjidInfoCard(
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
                         Text(
-                            text = "123456",
+                            text = masjidCode,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -235,7 +303,7 @@ private fun MasjidInfoCard(
                     }
 
                     FilledIconButton(
-                        onClick = { onCopyCode("123456") },
+                        onClick = { onCopyCode(masjidCode) },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
                         )
