@@ -3,6 +3,7 @@ package com.durranitech.salahsync.presentation.imam.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -39,95 +40,22 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.durranitech.salahsync.domain.model.Announcement
+import com.durranitech.salahsync.domain.model.Prayer
+import com.durranitech.salahsync.presentation.imam.ImamUiState
+import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 
 @Composable
 fun ImamHomeScreen(
-    viewModel: HomeViewModel = viewModel(),
+    paddingValues: PaddingValues,
     onNavigateToSalahTimes: () -> Unit = {},
     onNavigateToAnnouncements: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
-) {/* Column(
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .background(Brush.linearGradient(listOf(Color(0xFFE6F4EA), Color(0xFFD0F0E0))))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Assalamu Alaikum, ${userName.split(" ").firstOrNull() ?: "Brother"}",
-                fontSize = 22.sp,
-                color = Color(0xFF065F46)
-            )
-            Text(
-                "Welcome to your Imam dashboard. Manage your mosque's prayer times and community.",
-                fontSize = 14.sp,
-                color = Color(0xFF047857)
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Quick Stats
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
-            modifier = Modifier.heightIn(max = 350.dp)
-        ) {
-            item {
-                DashboardStat(
-                    icon = Icons.Default.AccessTime,
-                    title = "Next Prayer",
-                    value = "Asr - 3:45 PM"
-                )
-            }
-            item {
-                DashboardStat(
-                    icon = Icons.Default.CalendarToday,
-                    title = "Today's Date",
-                    value = "15 Rajab 1446"
-                )
-            }
-            item {
-                DashboardStat(
-                    icon = Icons.Default.People, title = "Registered Members", value = "127"
-                )
-            }
-            item {
-                DashboardStat(
-                    icon = Icons.Default.Notifications,
-                    title = "Pending Notifications",
-                    value = "3"
-                )
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        // Main Features
-        Column(modifier = Modifier.padding(16.dp)) {
-            PrayerTimesCard()
-            Spacer(Modifier.height(16.dp))
-            QuickActionsCard()
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Bottom: Recent Activity and Pending Tasks
-        Column(modifier = Modifier.padding(16.dp)) {
-            RecentActivityCard()
-            Spacer(Modifier.height(16.dp))
-            PendingTasksCard()
-        }
-        QuoteOfTheDayCard(
-            "The best among you are those who have the best manners and characte",
-            "- Prophet Muhammad (ﷺ), Sahih al-Bukhari",
-            iconVectorRes = Icons.AutoMirrored.Default.MenuBook
-        )
-
-    }*/
+    onNavigateToProfile: () -> Unit = {},
+    viewModel: ImamViewModel = hiltViewModel(),
+) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -141,9 +69,10 @@ fun ImamHomeScreen(
         )
     }
 }
+
 @Composable
 fun HomeContent(
-    uiState: HomeUiState,
+    uiState: ImamUiState,
     onViewAllSalahTimes: () -> Unit,
     onViewAllAnnouncements: () -> Unit,
     onViewAllActivities: () -> Unit,
@@ -158,13 +87,11 @@ fun HomeContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Prayer Time Card
-        uiState.nextPrayer?.let { prayer ->
-            NextPrayerCard(
-                prayer = prayer,
-                timeRemaining = uiState.timeUntilPrayer,
-                onViewAllClick = onViewAllSalahTimes
-            )
-        }
+        NextPrayerCard(
+            prayer = uiState.nextPrayer,
+            timeRemaining = uiState.timeUntilPrayer,
+            onViewAllClick = onViewAllSalahTimes
+        )
 
         // Announcements
         AnnouncementsCard(
@@ -175,43 +102,44 @@ fun HomeContent(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(userName: String) {
     TopAppBar(
         title = {
-            Column {
+        Column {
+            Text(
+                text = "Assalamu Alaikum,",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Assalamu Alaikum,",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    text = userName,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = userName,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = " 👋", style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-            }
-        }, actions = {
-            IconButton(onClick = { /* Handle notification click */ }) {
-                Icon(
-                    imageVector = Icons.Outlined.Notifications, contentDescription = "Notifications"
+                Text(
+                    text = " 👋", style = MaterialTheme.typography.headlineSmall
                 )
             }
-        }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        }
+    }, actions = {
+        IconButton(onClick = { /* Handle notification click */ }) {
+            Icon(
+                imageVector = Icons.Outlined.Notifications, contentDescription = "Notifications"
+            )
+        }
+    }, colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = MaterialTheme.colorScheme.surface
+    )
     )
 }
 
 @Composable
 fun NextPrayerCard(
-    prayer: PrayerTime, timeRemaining: TimeRemaining, onViewAllClick: () -> Unit
+    prayer: Prayer?, timeRemaining: Long? = 0, onViewAllClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -240,12 +168,12 @@ fun NextPrayerCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = prayer.name, style = MaterialTheme.typography.displayLarge.copy(
+                        text = prayer?.name ?: "No Prayer", style = MaterialTheme.typography.displayLarge.copy(
                             fontSize = MaterialTheme.typography.displayLarge.fontSize * 0.85f
                         ), fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = prayer.time,
+                        text = prayer?.time ?: "--:--",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         fontWeight = FontWeight.Medium
@@ -262,7 +190,7 @@ fun NextPrayerCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "-${timeRemaining.formatted()}",
+                        text = "-${timeRemaining}",
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold
@@ -348,28 +276,29 @@ fun AnnouncementsCard(
         }
     }
 }
+
 @Composable
 fun RowScope.BottomNavItem(
     icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit
 ) {
     NavigationBarItem(
         icon = {
-            Icon(
-                imageVector = icon, contentDescription = label, modifier = Modifier.size(24.dp)
-            )
-        }, label = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-            )
-        }, selected = selected, onClick = onClick, colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = MaterialTheme.colorScheme.primary,
-            selectedTextColor = MaterialTheme.colorScheme.primary,
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        Icon(
+            imageVector = icon, contentDescription = label, modifier = Modifier.size(24.dp)
         )
+    }, label = {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+        )
+    }, selected = selected, onClick = onClick, colors = NavigationBarItemDefaults.colors(
+        selectedIconColor = MaterialTheme.colorScheme.primary,
+        selectedTextColor = MaterialTheme.colorScheme.primary,
+        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    )
     )
 }
 

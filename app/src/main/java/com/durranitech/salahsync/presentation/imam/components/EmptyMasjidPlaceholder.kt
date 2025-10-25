@@ -187,8 +187,8 @@ private fun MasjidEmptyIllustration() {
         // Masjid Icon with decorative elements
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(28.dp))
+                .size(156.dp)
+                .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
             contentAlignment = Alignment.Center
         ) {
