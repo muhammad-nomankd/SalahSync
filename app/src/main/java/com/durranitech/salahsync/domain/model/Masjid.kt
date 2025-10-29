@@ -9,7 +9,6 @@ data class Masjid(
     val imageUrl: String = "",
     val imamName: String = "",
     val imamId: String = "",
-    val createdAt: String = "",
-    val updatedAt: String = "",
+    val lastUpdated: String = "",
     val salahTimes: SalahTime? = null
 )

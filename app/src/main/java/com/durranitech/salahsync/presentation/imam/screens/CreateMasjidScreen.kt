@@ -24,7 +24,9 @@ import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -45,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -57,7 +61,7 @@ import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewM
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CreateMasjidScreen(
     onCreateMasjidClick: (Masjid) -> Unit = {},
@@ -72,12 +76,12 @@ fun CreateMasjidScreen(
     val authState = authViewModel.state.collectAsStateWithLifecycle()
     val imamName = authState.value.user?.name
     val imamId = authState.value.user?.id
-    val imamState = imamViewModel.uiState.collectAsStateWithLifecycle()
+    val imamState by imamViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(authState,Unit,imamState) {
-        if (imamState.value.errorMessage != null){
-            Toast.makeText(context, imamState.value.errorMessage, Toast.LENGTH_SHORT).show()
+        if (imamState.errorMessage != null){
+            Toast.makeText(context, imamState.errorMessage, Toast.LENGTH_SHORT).show()
         }
         authViewModel.fetchUser()
     }
@@ -189,8 +193,7 @@ fun CreateMasjidScreen(
                             city = city.value,
                             imamName = imamName ?: "Imam",
                             code = UUID.randomUUID().toString(),
-                            createdAt = System.currentTimeMillis().toString(),
-                            updatedAt = System.currentTimeMillis().toString(),
+                            lastUpdated = System.currentTimeMillis().toString(),
                             imamId = imamId ?: ""
                         )
                     )
@@ -200,13 +203,16 @@ fun CreateMasjidScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                if (imamState.value.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp)
+                if (imamState.isLoading) {
+                    CircularWavyProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(32.dp)
                     )
                 } else {
-                    Text("Create Masjid", style = MaterialTheme.typography.titleMedium)
-
+                    Text(
+                        "Update Timings",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
 

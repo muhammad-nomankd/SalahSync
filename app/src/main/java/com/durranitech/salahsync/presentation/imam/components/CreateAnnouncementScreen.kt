@@ -74,11 +74,10 @@ fun CreateAnnouncementScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp)
-                .padding(top = 24.dp), verticalArrangement = Arrangement.Center
+                .padding(top = 24.dp), verticalArrangement = Arrangement.Top
         ) {
 
             Column {
-                // Title Label
                 Text(
                     text = "Title",
                     fontSize = 16.sp,
@@ -164,18 +163,18 @@ fun CreateAnnouncementScreen(
                 onClick = { onPostAnnouncement(title, message) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(28.dp),
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.large,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
                     text = "Post Announcement",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+
+
                 )
             }
         }
