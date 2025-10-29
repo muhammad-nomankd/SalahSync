@@ -159,16 +159,7 @@ fun MasjidDetailsScreenContent(
 
         // Past Announcements Section
         item {
-            PastAnnouncementsSection(
-                announcements = listOf(
-                    Announcement(
-                        id = "123456",
-                        title = "Eid Al-Fitr Announcement",
-                        description = "Eid Al-Fitr will be celebrated on June 15th. Please join us for special prayers and festivities.",
-                        date = System.currentTimeMillis().toString()
-                    )
-                )
-            )
+
         }
 
         // Action Buttons
@@ -178,39 +169,6 @@ fun MasjidDetailsScreenContent(
             )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MasjidDetailsTopBar(
-    onEditClick: () -> Unit, onShareClick: () -> Unit
-) {
-    TopAppBar(
-        title = {
-        Text(
-            text = "Masjid Details",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-    }, actions = {
-        IconButton(onClick = onEditClick) {
-            Icon(
-                imageVector = Icons.Outlined.Edit,
-                contentDescription = "Edit",
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        IconButton(onClick = onShareClick) {
-            Icon(
-                imageVector = Icons.Outlined.Share,
-                contentDescription = "Share",
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = Color.Transparent
-    )
-    )
 }
 
 @Composable
@@ -234,12 +192,11 @@ private fun MasjidInfoCard(imamName: String,imamId: String,masjidCode: String,ma
         ) {
             // Masjid Name
             Text(
-                text = masjidName ,
+                text = if (masjidName.isNotBlank()) masjidName else "Masjid name unavailable",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Address

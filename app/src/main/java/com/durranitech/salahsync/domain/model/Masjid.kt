@@ -11,5 +11,5 @@ data class Masjid(
     val imamId: String = "",
     val createdAt: String = "",
     val updatedAt: String = "",
-    val salahTimes: List<SalahTime> = emptyList()
+    val salahTimes: SalahTime? = null
 )
