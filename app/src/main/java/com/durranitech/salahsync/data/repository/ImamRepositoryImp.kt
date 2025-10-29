@@ -1,5 +1,6 @@
 package com.durranitech.salahsync.data.repository
 
+import android.util.Log
 import androidx.room.util.query
 import com.durranitech.salahsync.domain.model.Announcement
 import com.durranitech.salahsync.domain.model.Masjid
