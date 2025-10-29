@@ -11,8 +11,10 @@ data class ImamUiState(
     val errorMessage: String? = null,
     val salahTimes: List<SalahTime> = emptyList(),
     val announcements: List<Announcement> = emptyList(),
-    val nextPrayer: Prayer? = null,
+    val nextPrayer: String? = null,
+    val nextPrayerTime: Long? = null,
     val timeUntilPrayer: Long? = 0L,
-    val masjid: Masjid? = null
+    val masjid: Masjid? = null,
+    val salahTime: SalahTime? = null,
 
 )
