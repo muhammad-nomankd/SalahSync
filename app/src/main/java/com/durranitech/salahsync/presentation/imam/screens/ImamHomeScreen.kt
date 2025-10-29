@@ -215,12 +215,6 @@ fun AnnouncementsCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-
-
                 Column {
                     Text(
                         text = announcement.title,

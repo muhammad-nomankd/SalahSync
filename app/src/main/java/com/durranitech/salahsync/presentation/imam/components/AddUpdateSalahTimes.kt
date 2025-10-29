@@ -169,7 +169,7 @@ private fun PrayerTimeRow(
     ) {
         // Prayer name
         Text(
-            text = name, fontSize = 16.sp, color = Color.Black.copy(alpha = 0.8f)
+            text = name, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface
         )
 
         // Time picker button
@@ -192,13 +192,15 @@ private fun PrayerTimeRow(
             Text(
                 text = formatTimeFromMillis(timeMillis),
                 fontSize = 15.sp,
-                color = Color.Black.copy(alpha = 0.9f)
+                color = MaterialTheme.colorScheme.onSurface
+
+
             )
             Spacer(Modifier.width(6.dp))
             Icon(
                 Icons.Outlined.AccessTime,
                 contentDescription = null,
-                tint = Color.Gray,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp)
             )
         }
