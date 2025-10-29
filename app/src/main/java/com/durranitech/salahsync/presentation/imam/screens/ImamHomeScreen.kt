@@ -2,6 +2,7 @@ package com.durranitech.salahsync.presentation.imam.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,24 +15,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CardElevation
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -42,11 +40,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.durranitech.salahsync.domain.model.Announcement
-import com.durranitech.salahsync.domain.model.Prayer
+import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.presentation.imam.ImamUiState
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
+import com.durranitech.salahsync.util.formatTime
 
 @Composable
 fun ImamHomeScreen(
@@ -88,59 +86,34 @@ fun HomeContent(
     ) {
         // Prayer Time Card
         NextPrayerCard(
-            prayer = uiState.nextPrayer,
+            prayer = uiState.nextPrayer.toString(),
             timeRemaining = uiState.timeUntilPrayer,
             onViewAllClick = onViewAllSalahTimes
         )
 
         // Announcements
-        AnnouncementsCard(
-            announcements = uiState.announcements, onViewAllClick = onViewAllAnnouncements
-        )
+        uiState.announcements.forEach {
+            AnnouncementsCard(
+                announcement = it, onViewAllClick = onViewAllAnnouncements
+            )
+        }
 
 
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeTopBar(userName: String) {
-    TopAppBar(
-        title = {
-        Column {
-            Text(
-                text = "Assalamu Alaikum,",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = " 👋", style = MaterialTheme.typography.headlineSmall
-                )
-            }
-        }
-    }, actions = {
-        IconButton(onClick = { /* Handle notification click */ }) {
-            Icon(
-                imageVector = Icons.Outlined.Notifications, contentDescription = "Notifications"
-            )
-        }
-    }, colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.surface
-    )
-    )
-}
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NextPrayerCard(
-    prayer: Prayer?, timeRemaining: Long? = 0, onViewAllClick: () -> Unit
+    prayer: String?,
+    timeRemaining: Long? = 0,
+    onViewAllClick: () -> Unit,
+    viewModel: ImamViewModel = hiltViewModel()
 ) {
+
+
+    val state = viewModel.uiState.collectAsStateWithLifecycle()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -153,68 +126,76 @@ fun NextPrayerCard(
         Column(
             modifier = Modifier.padding(24.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                // Prayer Info
-                Column {
-                    Text(
-                        text = "NEXT PRAYER",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+            if (state.value.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularWavyProgressIndicator(modifier = Modifier.padding(16.dp))
+                }
+            } else
+            {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Prayer Info
+                    Column {
+                        Text(
+                            text = "NEXT PRAYER",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = prayer ?: "--",
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontSize = MaterialTheme.typography.displayLarge.fontSize * 0.85f
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = SalahTime().formatTime(state.value.nextPrayerTime ?: 0L) ?: "--",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    // Countdown
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "COUNTDOWN",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = formatCountdown(timeRemaining ?: 0L),
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = onViewAllClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.large,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                ) {
                     Text(
-                        text = prayer?.name ?: "No Prayer", style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = MaterialTheme.typography.displayLarge.fontSize * 0.85f
-                        ), fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = prayer?.time ?: "--:--",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Medium
+                        text = "View All Salah Times",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
-
-                // Countdown
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "COUNTDOWN",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "-${timeRemaining}",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Button(
-                onClick = onViewAllClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.large,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = "View All Salah Times",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
             }
         }
     }
@@ -222,43 +203,18 @@ fun NextPrayerCard(
 
 @Composable
 fun AnnouncementsCard(
-    announcements: List<Announcement>, onViewAllClick: () -> Unit
+    announcement: Announcement, onViewAllClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, MaterialTheme.shapes.extraLarge),
-        shape = MaterialTheme.shapes.extraLarge,
+            .fillMaxWidth(),
+        shape = CardDefaults.shape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Masjid Announcements",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                TextButton(onClick = onViewAllClick) {
-                    Text(
-                        text = "View All",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-
-            announcements.forEach { announcement ->
                 Column {
                     Text(
                         text = announcement.title,
@@ -272,7 +228,7 @@ fun AnnouncementsCard(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
-            }
+
         }
     }
 }
@@ -302,4 +258,12 @@ fun RowScope.BottomNavItem(
     )
 }
 
+fun formatCountdown(millis: Long): String {
+    if (millis <= 0) return "00:00:00"
+    val totalSeconds = millis / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+}
 

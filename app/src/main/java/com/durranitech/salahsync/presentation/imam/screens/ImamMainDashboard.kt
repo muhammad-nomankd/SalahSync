@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.presentation.imam.BottomNavigationItem
+import com.durranitech.salahsync.presentation.imam.components.AddUpdateSalahTimingsScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,42 +136,16 @@ fun ImamMainDashboard(
         }, containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
     ) { paddingValues ->
         when (selectedIndex) {
-            0 -> ImamHomeScreen(paddingValues)
+            0 -> ImamHomeScreen(paddingValues, onNavigateToSalahTimes = {selectedIndex = 4})
             1 -> AnnouncementsScreen()
             2 -> MasjidScreen(onCreateMasjid = onCreateMasjid)
             3 -> MembersScreen()
+            4 -> AddUpdateSalahTimingsScreen()
         }
 
     }
 
 
-}
-
-
-@Composable
-fun DashboardStat(icon: ImageVector, title: String, value: String) {
-    Card(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(16.dp)
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = Color(0xFF10B981),
-                modifier = Modifier.size(32.dp)
-            )
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(title, color = Color(0xFF059669), fontSize = 14.sp)
-                Text(value, color = Color(0xFF065F46), fontSize = 16.sp)
-            }
-        }
-    }
 }
 
 
@@ -229,111 +204,6 @@ fun PrayerTimesCard() {
     }
 }
 
-@Composable
-fun RecentActivityCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Recent Activity",
-                color = Color(0xFF065F46),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(Modifier.height(12.dp))
-
-            val activities = listOf(
-                Triple("Prayer time updated for Maghrib", "2 hours ago", Color(0xFF10B981)),
-                Triple("New member registered: Ali Rahman", "5 hours ago", Color(0xFF3B82F6)),
-                Triple("Announcement sent to 127 members", "1 day ago", Color(0xFF8B5CF6))
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                activities.forEach { (title, time, color) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                            .padding(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(color, CircleShape)
-                                .align(Alignment.CenterVertically)
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column {
-                            Text(title, color = color.darken(), fontSize = 14.sp)
-                            Text(time, color = color.copy(alpha = 0.7f), fontSize = 12.sp)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fun Color.darken(factor: Float = 0.8f): Color {
-    return Color(
-        red = red * factor, green = green * factor, blue = blue * factor, alpha = alpha
-    )
-}
-
-@Composable
-fun PendingTasksCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Pending Tasks",
-                color = Color(0xFF065F46),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(Modifier.height(12.dp))
-
-            val tasks = listOf(
-                Triple("Update Ramadan schedule", "High", Color(0xFFFACC15)),
-                Triple("Review member applications (3)", "Medium", Color(0xFF3B82F6)),
-                Triple("Prepare Friday khutbah", "Normal", Color(0xFF9CA3AF))
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                tasks.forEach { (task, priority, color) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = false, onCheckedChange = {})
-                            Spacer(Modifier.width(8.dp))
-                            Text(task, color = Color(0xFF374151), fontSize = 14.sp)
-                        }
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    color.copy(alpha = 0.2f), RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(priority, color = color.darken(), fontSize = 10.sp)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 // Color constants (picked to match the screenshot)

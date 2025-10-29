@@ -95,4 +95,22 @@ object AppModule {
     @Provides
     @Singleton
     fun provideGetMasjidUseCase(repository: ImamRepository) = GetMasjidUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun addOrUpdateSalahTimeUseCase(repository: ImamRepository) = AddOrUpdateSalahTimesUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun getSalahTimesUseCase(repository: ImamRepository) = GetUpcommignPrayerTimeUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun addAnnouncementUseCase(repository: ImamRepository) = AddAnnouncementUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun getAnnouncementsUseCase(repository: ImamRepository) = GetAnnouncementsUseCase(repository)
+
+
 }
