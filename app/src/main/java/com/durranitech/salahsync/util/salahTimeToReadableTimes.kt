@@ -1,6 +1,7 @@
 package com.durranitech.salahsync.util
 
 import com.durranitech.salahsync.domain.model.SalahTime
+/*
 
 fun SalahTime.toReadableTimes(): Map<String, String> {
     return mapOf(
@@ -11,4 +12,4 @@ fun SalahTime.toReadableTimes(): Map<String, String> {
         "Isha" to formatTime(isha),
         "Jummah" to formatTime(jummah)
     )
-}
+}*/

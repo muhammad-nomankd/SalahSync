@@ -16,7 +16,7 @@ import com.durranitech.salahsync.domain.usecase.GetUpcommignPrayerTimeUseCase
 import com.durranitech.salahsync.presentation.imam.ImamIntent
 import com.durranitech.salahsync.presentation.imam.ImamUiState
 import com.durranitech.salahsync.util.Resource
-import com.durranitech.salahsync.util.getNextPrayerAndCountdown
+import com.durranitech.salahsync.util.getNextPrayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -130,18 +130,20 @@ class ImamViewModel @Inject constructor(
     fun updatePrayerTimes(salahTime: SalahTime) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-
             val result = addOrUpdateSalahTimesUseCase(salahTime)
-
             when (result) {
-                is Resource.Success -> _uiState.value = _uiState.value.copy(
-                    isLoading = false, successMessage = "Prayer times updated successfully!"
-                )
-
+                is Resource.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        successMessage = "Prayer times updated successfully!",
+                        salahTime = salahTime
+                    )
+                    // Optionally refresh next prayer info after update!
+                    fetchMasjidPrayerTime()
+                }
                 is Resource.Error -> _uiState.value = _uiState.value.copy(
                     isLoading = false, errorMessage = result.message
                 )
-
                 is Resource.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
             }
         }
@@ -152,46 +154,39 @@ class ImamViewModel @Inject constructor(
             when (val result = getSalahTimesUseCase()) {
                 is Resource.Success -> {
                     val salahTime = result.data
-                    Log.d("SalahTime", "Salah time: $salahTime")
                     if (salahTime != null) {
-                        val nextPrayer = salahTime.getNextPrayerAndCountdown()
-                        val nextPrayerName = nextPrayer?.first
-                        var timeUntilPrayer = nextPrayer?.second ?: 0L
-
-                        // Calculate the absolute time of the next prayer
-                        val nextPrayerAbsoluteTime = System.currentTimeMillis() + timeUntilPrayer
-
-                        Log.d("SalahTime", "Salah time: $nextPrayer, $timeUntilPrayer, $nextPrayerAbsoluteTime")
-
+                        val nextPrayer = salahTime.getNextPrayer()
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             salahTime = salahTime,
-                            nextPrayerName = nextPrayerName,
-                            nextPrayerTime = nextPrayerAbsoluteTime,
-                            timeUntilPrayer = timeUntilPrayer
+                            nextPrayerName = nextPrayer?.name,
+                            nextPrayerTime = nextPrayer?.atMillis,
+                            timeUntilPrayer = nextPrayer?.remainingMillis ?: 0L
                         )
-
-                        viewModelScope.launch {
-                            while (timeUntilPrayer > 0) {
-                                delay(1000)
-                                timeUntilPrayer -= 1000
-                                _uiState.update {
-                                    it.copy(timeUntilPrayer = timeUntilPrayer)
+                        // Live countdown
+                        var countdown = nextPrayer?.remainingMillis ?: 0L
+                        if (countdown > 0L) {
+                            viewModelScope.launch {
+                                while (countdown > 0) {
+                                    delay(1000)
+                                    countdown -= 1000
+                                    _uiState.update {
+                                        it.copy(timeUntilPrayer = countdown)
+                                    }
                                 }
+                                fetchMasjidPrayerTime()
                             }
-                            fetchMasjidPrayerTime()
                         }
                     }
                 }
-
                 is Resource.Error -> _uiState.update {
                     it.copy(isLoading = false, errorMessage = result.message)
                 }
-
                 is Resource.Loading -> _uiState.update { it.copy(isLoading = true) }
             }
         }
     }
+
 
     fun addAnnouncement(announcement: Announcement) {
         viewModelScope.launch {

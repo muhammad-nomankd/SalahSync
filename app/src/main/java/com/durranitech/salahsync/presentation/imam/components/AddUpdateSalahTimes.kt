@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,52 +24,57 @@ import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 import com.durranitech.salahsync.ui.theme.SalahSyncTheme
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AddUpdateSalahTimingsScreen(
-    onNavigateBackToHomeScreen: () -> Unit = {}, viewModel: ImamViewModel = hiltViewModel()
+    onNavigateBackToHomeScreen: () -> Unit = {},
+    viewModel: ImamViewModel = hiltViewModel()
 ) {
-    LocalContext.current
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle() // lifecycle-aware state collection [web:44]
 
-    // Simple state for each prayer time
-    var fajrTime by remember { mutableLongStateOf(0L) }
-    var dhuhrTime by remember { mutableLongStateOf(0L) }
-    var asrTime by remember { mutableLongStateOf(0L) }
-    var maghribTime by remember { mutableLongStateOf(0L) }
-    var ishaTime by remember { mutableLongStateOf(0L) }
-    var jummahTime by remember { mutableLongStateOf(0L) }
+    // Local UI state as hour/minute (no millis)
+    var fajrHour by remember { mutableIntStateOf(5) }
+    var fajrMinute by remember { mutableIntStateOf(30) }
+    var dhuhrHour by remember { mutableIntStateOf(12) }
+    var dhuhrMinute by remember { mutableIntStateOf(30) }
+    var asrHour by remember { mutableIntStateOf(15) }
+    var asrMinute by remember { mutableIntStateOf(45) }
+    var maghribHour by remember { mutableIntStateOf(18) }
+    var maghribMinute by remember { mutableIntStateOf(15) }
+    var ishaHour by remember { mutableIntStateOf(20) }
+    var ishaMinute by remember { mutableIntStateOf(0) }
+    var jummahHour by remember { mutableIntStateOf(13) }
+    var jummahMinute by remember { mutableIntStateOf(30) }
 
-    // Initialize times from state or use defaults
+    // Initialize from state if available
     LaunchedEffect(state.salahTime) {
-        if (state.salahTime != null) {
-            fajrTime = state.salahTime?.fajr?: 0L
-            dhuhrTime = state.salahTime?.dhuhr?: 0L
-            asrTime = state.salahTime?.asr?: 0L
-            maghribTime = state.salahTime?.maghrib?: 0L
-            ishaTime = state.salahTime?.isha?: 0L
-            jummahTime = state.salahTime?.jummah?: 0L
-        } else {
-            // Default times
-            fajrTime = createTimeInMillis(5, 30)
-            dhuhrTime = createTimeInMillis(12, 30)
-            asrTime = createTimeInMillis(15, 45)
-            maghribTime = createTimeInMillis(18, 15)
-            ishaTime = createTimeInMillis(20, 0)
-            jummahTime = createTimeInMillis(13, 30)
+        state.salahTime?.let { t ->
+            // Expect SalahTime to be defined with hour/minute fields
+            fajrHour = t.fajrHour; fajrMinute = t.fajrMinute
+            dhuhrHour = t.dhuhrHour; dhuhrMinute = t.dhuhrMinute
+            asrHour = t.asrHour; asrMinute = t.asrMinute
+            maghribHour = t.maghribHour; maghribMinute = t.maghribMinute
+            ishaHour = t.ishaHour; ishaMinute = t.ishaMinute
+            jummahHour = t.jummahHour; jummahMinute = t.jummahMinute
         }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Update Salah Times") }, navigationIcon = {
-                IconButton(onClick = onNavigateBackToHomeScreen) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+            TopAppBar(
+                title = { Text("Update Salah Times") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBackToHomeScreen) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
                 }
-            })
-        }, containerColor = Color(0xFFF8FAF7)
+            )
+        },
+        containerColor = Color(0xFFF8FAF7)
     ) { padding ->
 
         Column(
@@ -88,32 +92,77 @@ fun AddUpdateSalahTimingsScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Column(Modifier.padding(vertical = 12.dp)) {
-                    if (state.isLoading){
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center){
-                            CircularWavyProgressIndicator()
-                        }
-                    } else{
+                    if (state.isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) { CircularProgressIndicator() }
+                    } else {
                         PrayerTimeRow(
-                            name = "Fajr", timeMillis = fajrTime, onTimeSelected = { fajrTime = it })
+                            name = "Fajr",
+                            hour = fajrHour,
+                            minute = fajrMinute,
+                            onTimeSelected = { h, m -> fajrHour = h; fajrMinute = m }
+                        )
 
                         PrayerTimeRow(
-                            name = "Dhuhr", timeMillis = dhuhrTime, onTimeSelected = { dhuhrTime = it })
+                            name = "Dhuhr",
+                            hour = dhuhrHour,
+                            minute = dhuhrMinute,
+                            onTimeSelected = { h, m -> dhuhrHour = h; dhuhrMinute = m }
+                        )
 
                         PrayerTimeRow(
-                            name = "Asr", timeMillis = asrTime, onTimeSelected = { asrTime = it })
+                            name = "Asr",
+                            hour = asrHour,
+                            minute = asrMinute,
+                            onTimeSelected = { h, m -> asrHour = h; asrMinute = m }
+                        )
 
                         PrayerTimeRow(
                             name = "Maghrib",
-                            timeMillis = maghribTime,
-                            onTimeSelected = { maghribTime = it })
+                            hour = maghribHour,
+                            minute = maghribMinute,
+                            onTimeSelected = { h, m -> maghribHour = h; maghribMinute = m }
+                        )
 
                         PrayerTimeRow(
-                            name = "Isha", timeMillis = ishaTime, onTimeSelected = { ishaTime = it })
+                            name = "Isha",
+                            hour = ishaHour,
+                            minute = ishaMinute,
+                            onTimeSelected = { h, m -> ishaHour = h; ishaMinute = m }
+                        )
 
                         PrayerTimeRow(
                             name = "Jummah",
-                            timeMillis = jummahTime,
-                            onTimeSelected = { jummahTime = it })
+                            hour = jummahHour,
+                            minute = jummahMinute,
+                            onTimeSelected = { h, m -> jummahHour = h; jummahMinute = m }
+                        )
+                    }
+                }
+            }
+
+            // Optional: show next prayer info if your ViewModel exposes it
+            if (!state.isLoading && state.nextPrayerName != null && state.nextPrayerTime != null) {
+                Spacer(Modifier.height(16.dp))
+                val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                val nextTimeFormatted = formatter.format(java.util.Date(state.nextPrayerTime!!))
+                val remain = state.timeUntilPrayer ?: 0L
+                val hours = TimeUnit.MILLISECONDS.toHours(remain)
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(remain) % 60
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF3FFF2))
+                ) {
+                    Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "Next Prayer", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Text(text = "${state.nextPrayerName} at $nextTimeFormatted", fontSize = 16.sp)
+                        Text(text = "Time until: ${hours}h ${minutes}m", fontSize = 15.sp)
                     }
                 }
             }
@@ -123,13 +172,14 @@ fun AddUpdateSalahTimingsScreen(
             // Update button
             Button(
                 onClick = {
+                    // Build SalahTime with hour/minute fields only
                     val salahTimes = SalahTime(
-                        fajr = fajrTime,
-                        dhuhr = dhuhrTime,
-                        asr = asrTime,
-                        maghrib = maghribTime,
-                        isha = ishaTime,
-                        jummah = jummahTime
+                        fajrHour = fajrHour, fajrMinute = fajrMinute,
+                        dhuhrHour = dhuhrHour, dhuhrMinute = dhuhrMinute,
+                        asrHour = asrHour, asrMinute = asrMinute,
+                        maghribHour = maghribHour, maghribMinute = maghribMinute,
+                        ishaHour = ishaHour, ishaMinute = ishaMinute,
+                        jummahHour = jummahHour, jummahMinute = jummahMinute
                     )
                     viewModel.updatePrayerTimes(salahTimes)
                 },
@@ -139,8 +189,9 @@ fun AddUpdateSalahTimingsScreen(
                 shape = MaterialTheme.shapes.large
             ) {
                 if (state.isLoading) {
-                    CircularWavyProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(32.dp)
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(32.dp)
                     )
                 } else {
                     Text(
@@ -156,7 +207,10 @@ fun AddUpdateSalahTimingsScreen(
 
 @Composable
 private fun PrayerTimeRow(
-    name: String, timeMillis: Long, onTimeSelected: (Long) -> Unit
+    name: String,
+    hour: Int,
+    minute: Int,
+    onTimeSelected: (Int, Int) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -183,18 +237,18 @@ private fun PrayerTimeRow(
                 .clickable {
                     showTimePicker(
                         context = context,
-                        currentTimeMillis = timeMillis,
-                        onTimeSelected = onTimeSelected
+                        currentHour = hour,
+                        currentMinute = minute,
+                        onPicked = onTimeSelected
                     )
                 }
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically) {
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = formatTimeFromMillis(timeMillis),
+                text = formatTimeFromHourMinute(hour, minute),
                 fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onSurface
-
-
             )
             Spacer(Modifier.width(6.dp))
             Icon(
@@ -207,40 +261,29 @@ private fun PrayerTimeRow(
     }
 }
 
-// Helper function to show time picker
+// Show a TimePickerDialog and return hour/minute only
 private fun showTimePicker(
-    context: android.content.Context, currentTimeMillis: Long, onTimeSelected: (Long) -> Unit
+    context: android.content.Context,
+    currentHour: Int,
+    currentMinute: Int,
+    onPicked: (Int, Int) -> Unit
 ) {
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = currentTimeMillis
-    }
-
     TimePickerDialog(
         context,
-        { _, hour, minute ->
-            val newTimeMillis = createTimeInMillis(hour, minute)
-            onTimeSelected(newTimeMillis)
-        },
-        calendar.get(Calendar.HOUR_OF_DAY),
-        calendar.get(Calendar.MINUTE),
+        { _, hour, minute -> onPicked(hour, minute) },
+        currentHour,
+        currentMinute,
         false // 12-hour format
     ).show()
 }
 
-// Convert hour and minute to milliseconds
-private fun createTimeInMillis(hour: Int, minute: Int): Long {
-    return Calendar.getInstance().apply {
+// Format hour/minute to readable time string
+private fun formatTimeFromHourMinute(hour: Int, minute: Int): String {
+    val calendar = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, hour)
         set(Calendar.MINUTE, minute)
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-}
-
-// Format milliseconds to readable time string
-private fun formatTimeFromMillis(timeInMillis: Long): String {
-    val calendar = Calendar.getInstance().apply {
-        this.timeInMillis = timeInMillis
     }
     val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
     return formatter.format(calendar.time)

@@ -96,6 +96,7 @@ class ImamRepositoryImp(
         }
     }
 
+    // Save/update prayer times as hour/minute fields
     override suspend fun updateMasjidPrayerTimes(prayer: SalahTime): Resource<Unit> {
         return try {
             val currentUser =
@@ -110,6 +111,7 @@ class ImamRepositoryImp(
 
             val masjidDocId = masjidQuery.documents.first().id
 
+            // Just save the SalahTime object—it will be mapped correctly
             firestore.collection("masjid").document(masjidDocId).update("salahTimes", prayer)
                 .await()
 
@@ -119,8 +121,7 @@ class ImamRepositoryImp(
         }
     }
 
-
-
+    // Fetch prayer times as hour/minute fields and map to SalahTime object
     override suspend fun getMasjidPrayerTimes(): Resource<SalahTime> {
         return try {
             val currentUser = firebaseAuth.currentUser
@@ -139,26 +140,19 @@ class ImamRepositoryImp(
             val salahTimesMap = masjidDoc.get("salahTimes") as? Map<*, *>
                 ?: return Resource.Error("Salah times not found for this masjid.")
 
-            // Safely parse possible Firestore Number or Timestamp values to Long
             val salahTime = SalahTime(
-                fajr = (salahTimesMap["fajr"] as? Number)?.toLong()
-                    ?: (salahTimesMap["fajr"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                    ?: 0L,
-                dhuhr = (salahTimesMap["dhuhr"] as? Number)?.toLong()
-                    ?: (salahTimesMap["dhuhr"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                    ?: 0L,
-                asr = (salahTimesMap["asr"] as? Number)?.toLong()
-                    ?: (salahTimesMap["asr"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                    ?: 0L,
-                maghrib = (salahTimesMap["maghrib"] as? Number)?.toLong()
-                    ?: (salahTimesMap["maghrib"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                    ?: 0L,
-                isha = (salahTimesMap["isha"] as? Number)?.toLong()
-                    ?: (salahTimesMap["isha"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                    ?: 0L,
-                jummah = (salahTimesMap["jummah"] as? Number)?.toLong()
-                    ?: (salahTimesMap["jummah"] as? com.google.firebase.Timestamp)?.toDate()?.time
-                    ?: 0L
+                fajrHour = (salahTimesMap["fajrHour"] as? Number)?.toInt() ?: 5,
+                fajrMinute = (salahTimesMap["fajrMinute"] as? Number)?.toInt() ?: 30,
+                dhuhrHour = (salahTimesMap["dhuhrHour"] as? Number)?.toInt() ?: 12,
+                dhuhrMinute = (salahTimesMap["dhuhrMinute"] as? Number)?.toInt() ?: 30,
+                asrHour = (salahTimesMap["asrHour"] as? Number)?.toInt() ?: 15,
+                asrMinute = (salahTimesMap["asrMinute"] as? Number)?.toInt() ?: 45,
+                maghribHour = (salahTimesMap["maghribHour"] as? Number)?.toInt() ?: 18,
+                maghribMinute = (salahTimesMap["maghribMinute"] as? Number)?.toInt() ?: 15,
+                ishaHour = (salahTimesMap["ishaHour"] as? Number)?.toInt() ?: 20,
+                ishaMinute = (salahTimesMap["ishaMinute"] as? Number)?.toInt() ?: 0,
+                jummahHour = (salahTimesMap["jummahHour"] as? Number)?.toInt() ?: 13,
+                jummahMinute = (salahTimesMap["jummahMinute"] as? Number)?.toInt() ?: 30
             )
 
             Resource.Success(salahTime)
@@ -167,6 +161,7 @@ class ImamRepositoryImp(
             Resource.Error(e.localizedMessage ?: "An unexpected error occurred while fetching salah times")
         }
     }
+
 
     override suspend fun addAnnouncements(announcement: Announcement): Resource<Unit> {
         return try {

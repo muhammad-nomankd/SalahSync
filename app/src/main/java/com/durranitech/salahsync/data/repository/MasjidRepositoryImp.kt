@@ -1,3 +1,4 @@
+/*
 package com.durranitech.salahsync.data.repository
 
 import com.durranitech.salahsync.domain.model.Announcement
@@ -67,4 +68,4 @@ class MasjidRepositoryImp (
     override suspend fun getNextPrayerTime(): SalahTime? {
         TODO("Not yet implemented")
     }
-}
+}*/
