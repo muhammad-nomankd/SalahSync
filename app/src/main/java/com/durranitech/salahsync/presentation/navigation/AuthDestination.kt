@@ -7,25 +7,25 @@ import kotlinx.serialization.Serializable
 sealed interface AuthDestination : NavKey {
 
     @Serializable
-    data object RoleSelectionScreen: AuthDestination
+    data object RoleSelectionScreen: Destination
 
     @Serializable
-    data class SignInScreen(val role: UserRole? = null): AuthDestination
+    data class SignInScreen(val role: UserRole? = null): Destination
 
     @Serializable
-    data class SignUpScreen(val role: UserRole? = null): AuthDestination
+    data class SignUpScreen(val role: UserRole? = null): Destination
 
 
     @Serializable
-    data object ImamDashboardScreen: AuthDestination
+    data object ImamDashboardScreen: Destination
 
     @Serializable
-    data object MuqtadiDashboardScreen: AuthDestination
+    data object MuqtadiDashboardScreen: Destination
 
     @Serializable
-    data object SplashScreen: AuthDestination
+    data object SplashScreen: Destination
 
     @Serializable
-    data object CreateMasjidScreen: AuthDestination
+    data object CreateMasjidScreen: Destination
 
 }

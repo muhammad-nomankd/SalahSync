@@ -1,6 +1,7 @@
 package com.durranitech.salahsync.presentation.navigation
 
 import SignInScreen
+import android.graphics.pdf.content.PdfPageGotoLinkContent
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +16,7 @@ import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.presentation.auth.screens.SignUpScreen
+import com.durranitech.salahsync.presentation.authentication.AuthIntent
 import com.durranitech.salahsync.presentation.authentication.screens.SplashScreen
 import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
 import com.durranitech.salahsync.presentation.imam.ImamIntent
@@ -30,7 +32,7 @@ fun MainRoute(paddingValues: PaddingValues) {
     val imamViewModel: ImamViewModel = hiltViewModel()
     val state = viewModel.state.collectAsStateWithLifecycle()
 
-    val backStack = rememberNavBackStack(AuthDestination.SplashScreen)
+    val backStack = rememberNavBackStack(Destination.SplashScreen)
     LaunchedEffect(Unit) {
         viewModel.decideStartDestination()
     }
@@ -42,6 +44,13 @@ fun MainRoute(paddingValues: PaddingValues) {
         }
     }
 
+    LaunchedEffect(state.value.isUserAuthenticated) {
+        if (state.value.isUserAuthenticated == false) {
+            backStack.clear()
+            backStack.add(Destination.RoleSelectionScreen)
+        }
+    }
+
     NavDisplay(
         backStack = backStack, onBack = { count ->
             repeat(count) { backStack.removeLastOrNull() }
@@ -50,61 +59,77 @@ fun MainRoute(paddingValues: PaddingValues) {
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ), entryProvider = entryProvider {
-            entry<AuthDestination.RoleSelectionScreen> { entry ->
+            entry<Destination.RoleSelectionScreen> { entry ->
                 RoleSelectionScreen(
                     onRoleSelect = { selectedRole ->
-                    backStack.add(AuthDestination.SignInScreen(selectedRole))
+                    backStack.add(Destination.SignInScreen(selectedRole))
                 }, paddingValues)
             }
-            entry<AuthDestination.SignInScreen> { entry ->
+            entry<Destination.SignInScreen> { entry ->
                 SignInScreen(
                     role = entry.role ?: UserRole.MUQTADI,
                     onBack = { backStack.removeLastOrNull() },
                     onSwitchToSignUp = { selectedRole ->
                         backStack.add(
-                            AuthDestination.SignUpScreen(selectedRole)
+                            Destination.SignUpScreen(selectedRole)
                         )
                     },
                     paddingValues,
-                    onSwitchToImamDashboard = { backStack.add(AuthDestination.ImamDashboardScreen) },
-                    onSwitchToMuqtadiDashboard = { backStack.add(AuthDestination.MuqtadiDashboardScreen) })
+                    onSwitchToImamDashboard = {
+                        backStack.clear()
+                        backStack.add(Destination.ImamDashboardScreen)
+                    },
+                    onSwitchToMuqtadiDashboard = {
+                        backStack.clear()
+                        backStack.add(Destination.MuqtadiDashboardScreen)
+                    })
             }
 
-            entry<AuthDestination.SignUpScreen> { entry ->
+            entry<Destination.SignUpScreen> { entry ->
                 SignUpScreen(
                     role = entry.role ?: UserRole.MUQTADI,
                     onBack = { backStack.removeLastOrNull() },
                     onSwitchToSignIn = { selectedRole ->
                         backStack.add(
-                            AuthDestination.SignInScreen(selectedRole)
+                            Destination.SignInScreen(selectedRole)
                         )
                     },
                     paddingValues = paddingValues,
-                    onSwitchToImamDashboard = { backStack.add(AuthDestination.ImamDashboardScreen) },
-                    onSwitchToMuqtadiDashboard = { backStack.add(AuthDestination.MuqtadiDashboardScreen) })
+                    onSwitchToImamDashboard = {
+                        backStack.clear()
+                        backStack.add(Destination.ImamDashboardScreen)
+                    },
+                    onSwitchToMuqtadiDashboard = {
+                        backStack.clear()
+                        backStack.add(Destination.MuqtadiDashboardScreen)
+                    })
             }
 
-            entry<AuthDestination.MuqtadiDashboardScreen> {
-                MuqtadiDashboard(toReleSelectionScreen = { backStack.clear()
-                    backStack.add(AuthDestination.RoleSelectionScreen) })
+            entry<Destination.MuqtadiDashboardScreen> {
+                MuqtadiDashboard(onSignOut = { viewModel.onAuthEvent(AuthIntent.LogOut) }, toRoleSelectionScreen = {
+                    backStack.clear()
+                    backStack.add(Destination.RoleSelectionScreen)
+                })
             }
-            entry<AuthDestination.ImamDashboardScreen> {
+            entry<Destination.ImamDashboardScreen> {
                 ImamMainDashboard(
                     userName = "Noman Khan",
                     userEmail = "mnomankd@gmail.com",
-                    onSignOut = { backStack.add(AuthDestination.SignInScreen(UserRole.MUQTADI)) },
+                    onSignOut = {
+                        viewModel.onAuthEvent(AuthIntent.LogOut)
+                    },
                     paddingValue = paddingValues,
-                    onCreateMasjid = { backStack.add(AuthDestination.CreateMasjidScreen) }
-                )
+                    onCreateMasjid = { backStack.add(Destination.CreateMasjidScreen) })
             }
 
-            entry<AuthDestination.SplashScreen> {
+            entry<Destination.SplashScreen> {
                 SplashScreen()
             }
 
-            entry<AuthDestination.CreateMasjidScreen> {
-                CreateMasjidScreen(onBackClick = {backStack.add(AuthDestination.ImamDashboardScreen)}
-                , onCreateMasjidClick = {imamViewModel.onImamEvent(ImamIntent.createMasjid(it))})
+            entry<Destination.CreateMasjidScreen> {
+                CreateMasjidScreen(
+                    onBackClick = { backStack.add(Destination.ImamDashboardScreen) },
+                    onCreateMasjidClick = { imamViewModel.onImamEvent(ImamIntent.createMasjid(it)) })
             }
         })
 }

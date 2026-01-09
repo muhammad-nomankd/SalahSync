@@ -12,7 +12,7 @@ import com.durranitech.salahsync.domain.usecase.SignOutUseCase
 import com.durranitech.salahsync.domain.usecase.SignUpUseCase
 import com.durranitech.salahsync.presentation.authentication.AuthIntent
 import com.durranitech.salahsync.presentation.authentication.AuthState
-import com.durranitech.salahsync.presentation.navigation.AuthDestination
+import com.durranitech.salahsync.presentation.navigation.Destination
 import com.durranitech.salahsync.util.Resource
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -214,16 +214,16 @@ class AuthViewModel @Inject constructor(
             val currentUser = firebaseAuth.currentUser
             if (currentUser == null) {
                 _state.value = _state.value.copy(
-                    startDestination = AuthDestination.RoleSelectionScreen, isLoading = false
+                    startDestination = Destination.RoleSelectionScreen, isLoading = false
                 )
             } else {
                 val result = getUserRoleUseCase(currentUser.uid)
                 when (result) {
                     is Resource.Success -> {
                         val destination = when (result.data) {
-                            UserRole.IMAM -> AuthDestination.ImamDashboardScreen
-                            UserRole.MUQTADI -> AuthDestination.MuqtadiDashboardScreen
-                            else -> AuthDestination.RoleSelectionScreen
+                            UserRole.IMAM -> Destination.ImamDashboardScreen
+                            UserRole.MUQTADI -> Destination.MuqtadiDashboardScreen
+                            else -> Destination.RoleSelectionScreen
                         }
                         _state.value = _state.value.copy(
                             startDestination = destination, role = result.data, isLoading = false
@@ -232,7 +232,7 @@ class AuthViewModel @Inject constructor(
 
                     is Resource.Error -> {
                         _state.value = _state.value.copy(
-                            startDestination = AuthDestination.RoleSelectionScreen,
+                            startDestination = Destination.RoleSelectionScreen,
                             error = result.message,
                             isLoading = false
                         )

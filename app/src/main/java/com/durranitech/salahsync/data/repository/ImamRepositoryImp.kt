@@ -1,9 +1,8 @@
 package com.durranitech.salahsync.data.repository
 
-import android.util.Log
-import androidx.room.util.query
 import com.durranitech.salahsync.domain.model.Announcement
 import com.durranitech.salahsync.domain.model.Masjid
+import com.durranitech.salahsync.domain.model.Member
 import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.domain.repository.ImamRepository
 import com.durranitech.salahsync.util.Resource
@@ -42,12 +41,10 @@ class ImamRepositoryImp(
 
     override suspend fun createMasjid(masjid: Masjid): Resource<Unit> {
         return try {
-            val currentUser = firebaseAuth.currentUser
-                ?: return Resource.Error("User not authenticated")
-            val existingMasjidQuery = firestore.collection("masjid")
-                .whereEqualTo("imamId", currentUser.uid)
-                .get()
-                .await()
+            val currentUser =
+                firebaseAuth.currentUser ?: return Resource.Error("User not authenticated")
+            val existingMasjidQuery =
+                firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
 
             if (!existingMasjidQuery.isEmpty) {
                 return Resource.Error("Masjid already exists for this imam.")
@@ -65,7 +62,6 @@ class ImamRepositoryImp(
     }
 
 
-
     override fun getMasjidDetails(): Flow<Resource<Masjid>> = flow {
         emit(Resource.Loading())
 
@@ -76,8 +72,7 @@ class ImamRepositoryImp(
                 return@flow
             }
 
-            val masjidSnapshot =
-                firestore.collection("masjid").get().await()
+            val masjidSnapshot = firestore.collection("masjid").get().await()
 
             if (masjidSnapshot.isEmpty) {
                 emit(Resource.Error("No masjid found for this Imam"))
@@ -124,13 +119,11 @@ class ImamRepositoryImp(
     // Fetch prayer times as hour/minute fields and map to SalahTime object
     override suspend fun getMasjidPrayerTimes(): Resource<SalahTime> {
         return try {
-            val currentUser = firebaseAuth.currentUser
-                ?: return Resource.Error("User not authenticated")
+            val currentUser =
+                firebaseAuth.currentUser ?: return Resource.Error("User not authenticated")
 
-            val masjidQuery = firestore.collection("masjid")
-                .whereEqualTo("imamId", currentUser.uid)
-                .get()
-                .await()
+            val masjidQuery =
+                firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
 
             if (masjidQuery.isEmpty) {
                 return Resource.Error("Masjid not found for this imam.")
@@ -158,7 +151,9 @@ class ImamRepositoryImp(
             Resource.Success(salahTime)
 
         } catch (e: Exception) {
-            Resource.Error(e.localizedMessage ?: "An unexpected error occurred while fetching salah times")
+            Resource.Error(
+                e.localizedMessage ?: "An unexpected error occurred while fetching salah times"
+            )
         }
     }
 
@@ -166,28 +161,49 @@ class ImamRepositoryImp(
     override suspend fun addAnnouncements(announcement: Announcement): Resource<Unit> {
         return try {
             Resource.Loading()
-            val currentUser = firebaseAuth.currentUser?: return Resource.Error("No user logged in")
+            val currentUser = firebaseAuth.currentUser ?: return Resource.Error("No user logged in")
 
-            val masjidQuery = firestore.collection("masjid").whereEqualTo("imamId",currentUser.uid)
-                .get()
-                .await()
-            if (masjidQuery.isEmpty){
+            val masjidQuery =
+                firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
+            if (masjidQuery.isEmpty) {
                 return Resource.Error("No masjid found for this user")
             }
             val masjidDocId = masjidQuery.documents.first().id
-            val announcementRef = firestore.collection("masjid")
-                .document(masjidDocId)
-                .collection("announcements")
-                .document()
+            val announcementRef =
+                firestore.collection("masjid").document(masjidDocId).collection("announcements")
+                    .document()
 
             val announcementWithId = announcement.copy(id = announcementRef.id)
             announcementRef.set(announcementWithId)
             Resource.Success(Unit)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Resource.Error(e.message ?: "An unexpected error occurred while adding announcement")
         }
 
 
+    }
+
+    override suspend fun deleteAnnouncement(announcementId: String): Resource<Unit> {
+        return try {
+            val currentUser =
+                firebaseAuth.currentUser ?: return Resource.Error("User not authenticated")
+
+            val masjidQuery =
+                firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
+
+            if (masjidQuery.isEmpty) {
+                return Resource.Error("No masjid found for this user")
+            }
+
+            val masjidDocId = masjidQuery.documents.first().id
+
+            firestore.collection("masjid").document(masjidDocId).collection("announcements")
+                .document(announcementId).delete().await()
+
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unexpected error occurred while deleting announcement")
+        }
     }
 
 
@@ -202,28 +218,31 @@ class ImamRepositoryImp(
 
         var listener: ListenerRegistration? = null
 
-        firestore.collection("masjid")
-            .whereEqualTo("imamId", currentUser.uid)
-            .get().addOnSuccessListener { querySnapshot ->
+        firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get()
+            .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
                     trySend(Resource.Error("Masjid not found"))
                     close()
                     return@addOnSuccessListener
                 }
                 val masjidDocId = querySnapshot.documents.first().id
-                listener = firestore.collection("masjid")
-                    .document(masjidDocId)
-                    .collection("announcements")
-                    .orderBy("date", Query.Direction.DESCENDING)
-                    .addSnapshotListener { snapshot, e ->
-                        if (e != null) {
-                            trySend(Resource.Error(e.localizedMessage ?: "An unexpected error occurred"))
-                            return@addSnapshotListener
-                        }
-                        val annoucements = snapshot?.toObjects(Announcement::class.java) ?: emptyList()
-                        trySend(Resource.Success(annoucements))
+                listener =
+                    firestore.collection("masjid").document(masjidDocId).collection("announcements")
+                        .orderBy("date", Query.Direction.DESCENDING)
+                        .addSnapshotListener { snapshot, e ->
+                            if (e != null) {
+                                trySend(
+                                    Resource.Error(
+                                        e.localizedMessage ?: "An unexpected error occurred"
+                                    )
+                                )
+                                return@addSnapshotListener
+                            }
+                            val annoucements =
+                                snapshot?.toObjects(Announcement::class.java) ?: emptyList()
+                            trySend(Resource.Success(annoucements))
 
-                    }
+                        }
             }.addOnFailureListener {
                 trySend(Resource.Error(it.localizedMessage ?: "Failed to fetch masjid"))
                 close()
@@ -231,5 +250,96 @@ class ImamRepositoryImp(
         awaitClose { listener?.remove() }
     }
 
+
+
+    override suspend fun addMember(member: Member): Resource<Unit> {
+        return try {
+            val currentUser =
+                firebaseAuth.currentUser ?: return Resource.Error("User not authenticated")
+
+            val masjidQuery =
+                firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
+
+            if (masjidQuery.isEmpty) {
+                return Resource.Error("No masjid found for this user")
+            }
+
+            val masjidDocId = masjidQuery.documents.first().id
+            val memberRef =
+                firestore.collection("masjid").document(masjidDocId).collection("members")
+                    .document()
+
+            val memberWithId = member.copy(id = memberRef.id)
+            memberRef.set(memberWithId).await()
+
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unexpected error occurred while adding member")
+        }
+    }
+
+    override suspend fun deleteMember(memberId: String): Resource<Unit> {
+        return try {
+            val currentUser =
+                firebaseAuth.currentUser ?: return Resource.Error("User not authenticated")
+
+            val masjidQuery =
+                firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
+
+            if (masjidQuery.isEmpty) {
+                return Resource.Error("No masjid found for this user")
+            }
+
+            val masjidDocId = masjidQuery.documents.first().id
+
+            firestore.collection("masjid").document(masjidDocId).collection("members")
+                .document(memberId).delete().await()
+
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "An unexpected error occurred while deleting member")
+        }
+    }
+
+    override suspend fun getMembers(): Flow<Resource<List<Member>>> = callbackFlow {
+        trySend(Resource.Loading())
+        val currentUser = firebaseAuth.currentUser
+        if (currentUser == null) {
+            trySend(Resource.Error("User not authenticated"))
+            close()
+            return@callbackFlow
+        }
+
+        var listener: ListenerRegistration? = null
+
+        firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    trySend(Resource.Error("Masjid not found"))
+                    close()
+                    return@addOnSuccessListener
+                }
+                val masjidDocId = querySnapshot.documents.first().id
+                listener =
+                    firestore.collection("masjid").document(masjidDocId).collection("members")
+                        .orderBy("joinedDate", Query.Direction.DESCENDING)
+                        .addSnapshotListener { snapshot, e ->
+                            if (e != null) {
+                                trySend(
+                                    Resource.Error(
+                                        e.localizedMessage ?: "An unexpected error occurred"
+                                    )
+                                )
+                                return@addSnapshotListener
+                            }
+                            val members = snapshot?.toObjects(Member::class.java) ?: emptyList()
+                            trySend(Resource.Success(members))
+                        }
+            }.addOnFailureListener {
+                trySend(Resource.Error(it.localizedMessage ?: "Failed to fetch masjid"))
+                close()
+            }
+        awaitClose { listener?.remove() }
+    }
 
 }

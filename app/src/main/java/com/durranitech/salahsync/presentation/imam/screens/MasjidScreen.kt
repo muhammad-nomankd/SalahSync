@@ -25,17 +25,14 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -43,8 +40,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -52,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -80,14 +74,14 @@ fun MasjidScreen(
 ) {
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val imamName = state.masjid?.imamName ?:""
-    val imamId = state.masjid?.imamId ?:""
-    val masjidCode = state.masjid?.code ?:""
-    val masjidName = state.masjid?.name?:""
-    val masjidAddress = state.masjid?.address?:""
+    val imamName = state.masjid?.imamName ?: ""
+    val imamId = state.masjid?.imamId ?: ""
+    val masjidCode = state.masjid?.code ?: ""
+    val masjidName = state.masjid?.name ?: ""
+    val masjidAddress = state.masjid?.address ?: ""
 
     Scaffold { padding ->
-        if (state.masjid != null){
+        if (state.masjid != null) {
             MasjidDetailsScreenContent(
                 imamName = imamName,
                 imamId = imamId,
@@ -107,7 +101,7 @@ fun MasjidScreen(
                 CircularProgressIndicator()
             }
         } else {
-            EmptyMasjidPlaceholder(onCreateMasjid = {onCreateMasjid()})
+            EmptyMasjidPlaceholder(onCreateMasjid = { onCreateMasjid() })
         }
     }
 }
@@ -135,45 +129,38 @@ fun MasjidDetailsScreenContent(
             .fillMaxSize()
             .padding(padding)
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(vertical = 16.dp)
     ) {
-        // Main Masjid Info Card
+
         item {
             MasjidInfoCard(
-                imamName,imamId,masjidCode,masjidName,masjidAddress,
-                onEditDetails = onEditDetails, onCopyCode = { code ->
+                imamName,
+                imamId,
+                masjidCode,
+                masjidName,
+                masjidAddress,
+                onEditDetails = onEditDetails,
+                onCopyCode = { code ->
                     clipboardManager.setText(AnnotatedString(code))
                     Toast.makeText(context, "Copied to clipboard $code", Toast.LENGTH_SHORT).show()
 
                 })
         }
 
-        // Linked Members Section
-        item {
-            LinkedMembersSection(
-                members = listOf(Member(name = "John Doe", "imam@gmail.com")),
-                onViewAll = onViewAllMembers
-            )
-        }
-
-        // Past Announcements Section
-        item {
-
-        }
-
-        // Action Buttons
-        item {
-            ActionButtons(
-                onAddAnnouncement = onAddAnnouncement, onManageData = onManageData
-            )
-        }
     }
+
 }
 
 @Composable
-private fun MasjidInfoCard(imamName: String,imamId: String,masjidCode: String,masjidName: String, masjidAddress: String,
-    onEditDetails: () -> Unit, onCopyCode: (String) -> Unit
+private fun MasjidInfoCard(
+    imamName: String,
+    imamId: String,
+    masjidCode: String,
+    masjidName: String,
+    masjidAddress: String,
+    onEditDetails: () -> Unit,
+    onCopyCode: (String) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -192,7 +179,7 @@ private fun MasjidInfoCard(imamName: String,imamId: String,masjidCode: String,ma
         ) {
             // Masjid Name
             Text(
-                text = if (masjidName.isNotBlank()) masjidName else "Masjid name unavailable",
+                text = masjidName.ifBlank { "Masjid name unavailable" },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -293,227 +280,3 @@ private fun MasjidInfoCard(imamName: String,imamId: String,masjidCode: String,ma
         }
     }
 }
-
-@Composable
-private fun LinkedMembersSection(
-    members: List<Member>, onViewAll: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Linked Members",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                TextButton(onClick = onViewAll) {
-                    Text(
-                        text = "View All Members",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(members) { member ->
-                    MemberItem(member = member)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MemberItem(member: Member) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.width(80.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFFFB74D), Color(0xFFFF9800)
-                        )
-                    )
-                ), contentAlignment = Alignment.Center
-        ) {
-            // Use member initial or icon
-            Text(
-                text = member.name.first().toString(),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
-
-        Text(
-            text = member.name,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun PastAnnouncementsSection(
-    announcements: List<Announcement>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        ) {
-            Text(
-                text = "Past Announcements",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            announcements.forEach { announcement ->
-                AnnouncementItem(announcement = announcement)
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun AnnouncementItem(announcement: Announcement) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
-        onClick = { /* Navigate to detail */ }) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = announcement.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = announcement.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = announcement.title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionButtons(
-    onAddAnnouncement: () -> Unit, onManageData: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Add Announcement Button
-        Button(
-            onClick = onAddAnnouncement,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 4.dp, pressedElevation = 8.dp
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Add New Announcement",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        // Manage Data Button
-        OutlinedButton(
-            onClick = onManageData,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-            ),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Storage,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Manage Masjid Data",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-

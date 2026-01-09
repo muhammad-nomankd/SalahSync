@@ -1,23 +1,27 @@
 package com.durranitech.salahsync.presentation.imam.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.durranitech.salahsync.domain.model.Announcement
 import com.durranitech.salahsync.domain.model.Masjid
+import com.durranitech.salahsync.domain.model.Member
 import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.domain.usecase.AddAnnouncementUseCase
+import com.durranitech.salahsync.domain.usecase.AddMemberUseCase
 import com.durranitech.salahsync.domain.usecase.AddOrUpdateSalahTimesUseCase
 import com.durranitech.salahsync.domain.usecase.CreateMasjidUseCase
+import com.durranitech.salahsync.domain.usecase.DeleteMemberUseCase
 import com.durranitech.salahsync.domain.usecase.GetAnnouncementsUseCase
 import com.durranitech.salahsync.domain.usecase.GetMasjidDetailsUseCase
 import com.durranitech.salahsync.domain.usecase.GetMasjidUseCase
+import com.durranitech.salahsync.domain.usecase.GetMembersUseCase
 import com.durranitech.salahsync.domain.usecase.GetUpcommignPrayerTimeUseCase
 import com.durranitech.salahsync.presentation.imam.ImamIntent
 import com.durranitech.salahsync.presentation.imam.ImamUiState
 import com.durranitech.salahsync.util.Resource
-import com.durranitech.salahsync.util.getNextPrayer
+import com.durranitech.salahsync.util.getNextPrayerSimple
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,17 +37,24 @@ class ImamViewModel @Inject constructor(
     private val addOrUpdateSalahTimesUseCase: AddOrUpdateSalahTimesUseCase,
     private val getSalahTimesUseCase: GetUpcommignPrayerTimeUseCase,
     private val addAnnouncementUseCase: AddAnnouncementUseCase,
-    private val getAnnouncementsUseCase: GetAnnouncementsUseCase
+    private val getAnnouncementsUseCase: GetAnnouncementsUseCase,
+    private val deleteAnnouncementUseCase: com.durranitech.salahsync.domain.usecase.DeleteAnnouncementUseCase,
+    private val addMemberUseCase: AddMemberUseCase,
+    private val deleteMemberUseCase: DeleteMemberUseCase,
+    private val getMembersUseCase: GetMembersUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ImamUiState(isLoading = true))
     val uiState = _uiState.asStateFlow()
+
+    private var countdownJob: Job? = null
 
     init {
         getMasjid()
         getMasjidDetails()
         fetchMasjidPrayerTime()
         getAnnouncements()
+        getMembers()
     }
 
     fun onImamEvent(intent: ImamIntent) {
@@ -62,8 +73,7 @@ class ImamViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
-            val result = createMasjidUseCase(masjid)
-            when (result) {
+            when (val result = createMasjidUseCase(masjid)) {
                 is Resource.Success -> {
                     _uiState.update {
                         it.copy(
@@ -91,8 +101,7 @@ class ImamViewModel @Inject constructor(
     fun getMasjid() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = getMasjidUseCase()
-            when (result) {
+            when (val result = getMasjidUseCase()) {
                 is Resource.Error -> _uiState.value = _uiState.value.copy(
                     isLoading = false, errorMessage = "Masjid fetched successfully ✅"
                 )
@@ -130,58 +139,59 @@ class ImamViewModel @Inject constructor(
     fun updatePrayerTimes(salahTime: SalahTime) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            val result = addOrUpdateSalahTimesUseCase(salahTime)
-            when (result) {
+            when (val result = addOrUpdateSalahTimesUseCase(salahTime)) {
                 is Resource.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         successMessage = "Prayer times updated successfully!",
                         salahTime = salahTime
                     )
-                    // Optionally refresh next prayer info after update!
                     fetchMasjidPrayerTime()
                 }
+
                 is Resource.Error -> _uiState.value = _uiState.value.copy(
                     isLoading = false, errorMessage = result.message
                 )
+
                 is Resource.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
             }
         }
     }
 
     fun fetchMasjidPrayerTime() {
+        countdownJob?.cancel()
+
         viewModelScope.launch {
             when (val result = getSalahTimesUseCase()) {
                 is Resource.Success -> {
                     val salahTime = result.data
-                    if (salahTime != null) {
-                        val nextPrayer = salahTime.getNextPrayer()
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            salahTime = salahTime,
-                            nextPrayerName = nextPrayer?.name,
-                            nextPrayerTime = nextPrayer?.atMillis,
-                            timeUntilPrayer = nextPrayer?.remainingMillis ?: 0L
-                        )
-                        // Live countdown
-                        var countdown = nextPrayer?.remainingMillis ?: 0L
-                        if (countdown > 0L) {
-                            viewModelScope.launch {
-                                while (countdown > 0) {
-                                    delay(1000)
-                                    countdown -= 1000
-                                    _uiState.update {
-                                        it.copy(timeUntilPrayer = countdown)
-                                    }
+                    val nextPrayer = salahTime.getNextPrayerSimple()
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        salahTime = salahTime,
+                        nextPrayerName = nextPrayer?.name,
+                        nextPrayerTime = nextPrayer?.atMillis,
+                        timeUntilPrayer = nextPrayer?.remainingMillis ?: 0L
+                    )
+                    var countdown = nextPrayer?.remainingMillis ?: 0L
+                    if (countdown > 0L) {
+                        countdownJob = viewModelScope.launch {
+                            while (countdown > 0) {
+                                delay(1000)
+                                countdown -= 1000
+                                _uiState.update {
+                                    it.copy(timeUntilPrayer = countdown)
                                 }
-                                fetchMasjidPrayerTime()
                             }
+                            fetchMasjidPrayerTime()
                         }
                     }
                 }
+
                 is Resource.Error -> _uiState.update {
                     it.copy(isLoading = false, errorMessage = result.message)
                 }
+
                 is Resource.Loading -> _uiState.update { it.copy(isLoading = true) }
             }
         }
@@ -192,14 +202,10 @@ class ImamViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    isLoading = true,
-                    errorMessage = null,
-                    successMessage = null
+                    isLoading = true, errorMessage = null, successMessage = null
                 )
             }
-            val result = addAnnouncementUseCase(announcement)
-
-            when (result) {
+            when (val result = addAnnouncementUseCase(announcement)) {
                 is Resource.Success -> {
                     _uiState.update {
                         it.copy(
@@ -236,8 +242,7 @@ class ImamViewModel @Inject constructor(
 
                     is Resource.Error -> _uiState.update {
                         it.copy(
-                            errorMessage = result.message,
-                            isLoading = false
+                            errorMessage = result.message, isLoading = false
                         )
                     }
 
@@ -245,6 +250,142 @@ class ImamViewModel @Inject constructor(
                 }
             }
 
+        }
+    }
+
+    fun deleteAnnouncement(announcementId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+            val result = deleteAnnouncementUseCase(announcementId)
+
+            when (result) {
+                is Resource.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            successMessage = "Announcement deleted successfully"
+                        )
+                    }
+                    // Refresh the list after deletion
+                    getAnnouncements()
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+
+                is Resource.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
+            }
+        }
+    }
+
+    fun getMembers() {
+        viewModelScope.launch {
+            getMembersUseCase().collect { result ->
+                when (result) {
+                    is Resource.Success -> _uiState.update {
+                        it.copy(members = result.data, isLoading = false)
+                    }
+                    is Resource.Error -> _uiState.update {
+                        it.copy(
+                            errorMessage = result.message,
+                            isLoading = false
+                        )
+                    }
+                    is Resource.Loading -> _uiState.update { it.copy(isLoading = true) }
+                }
+            }
+        }
+    }
+
+    fun addMember(member: Member) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+            val result = addMemberUseCase(member)
+
+            when (result) {
+                is Resource.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            successMessage = "Member added successfully"
+                        )
+                    }
+                    // Refresh the list after addition
+                    getMembers()
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+
+                is Resource.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
+            }
+        }
+    }
+
+    fun deleteMember(memberId: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+            val result = deleteMemberUseCase(memberId)
+
+            when (result) {
+                is Resource.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            successMessage = "Member deleted successfully"
+                        )
+                    }
+                    // Refresh the list after deletion
+                    getMembers()
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+
+                is Resource.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
+            }
         }
     }
 

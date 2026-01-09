@@ -140,7 +140,7 @@ fun ImamMainDashboard(
             1 -> AnnouncementsScreen()
             2 -> MasjidScreen(onCreateMasjid = onCreateMasjid)
             3 -> MembersScreen()
-            4 -> AddUpdateSalahTimingsScreen()
+            4 -> AddUpdateSalahTimingsScreen(onNavigateBackToHomeScreen = {selectedIndex = 0})
         }
 
     }

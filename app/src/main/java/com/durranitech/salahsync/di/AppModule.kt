@@ -112,5 +112,20 @@ object AppModule {
     @Singleton
     fun getAnnouncementsUseCase(repository: ImamRepository) = GetAnnouncementsUseCase(repository)
 
+    @Provides
+    @Singleton
+    fun deleteAnnouncementUseCase(repository: ImamRepository) = DeleteAnnouncementUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun addMemberUseCase(repository: ImamRepository) = AddMemberUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun deleteMemberUseCase(repository: ImamRepository) = DeleteMemberUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun getMembersUseCase(repository: ImamRepository) = GetMembersUseCase(repository)
 
 }

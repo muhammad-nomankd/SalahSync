@@ -2,7 +2,7 @@ package com.durranitech.salahsync.presentation.authentication
 
 import com.durranitech.salahsync.domain.model.User
 import com.durranitech.salahsync.domain.model.UserRole
-import com.durranitech.salahsync.presentation.navigation.AuthDestination
+import com.durranitech.salahsync.presentation.navigation.Destination
 
 data class AuthState(
     val isLoading: Boolean = false,
@@ -14,5 +14,6 @@ data class AuthState(
     val isLoggedOut: Boolean = false,
     val role: UserRole? = null,
     val userId: String? = null,
-    val startDestination: AuthDestination? = null
+    val startDestination: Destination? = null,
+    val destination: Destination? = null
 )

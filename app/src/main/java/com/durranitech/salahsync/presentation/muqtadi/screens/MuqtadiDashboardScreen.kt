@@ -63,7 +63,7 @@ import com.durranitech.salahsync.presentation.imam.screens.PrayerTimesCard
 
 @Composable
 fun MuqtadiDashboard(
-    userName: String = "Brother", onSignOut: () -> Unit = {}, toReleSelectionScreen: () -> Unit,
+    userName: String = "Brother", onSignOut: () -> Unit = {}, toRoleSelectionScreen: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val gradient = Brush.verticalGradient(
@@ -77,7 +77,7 @@ fun MuqtadiDashboard(
     }, floatingActionButton = {
         IconButton(onClick = {viewModel.signOut()
             if(viewModel.state.value.isUserAuthenticated == false){
-                toReleSelectionScreen()
+                toRoleSelectionScreen()
             }else{
                 viewModel.signOut()
             }
@@ -598,6 +598,6 @@ fun Color.darken(factor: Float): Color {
 @Preview
 @Composable
 private fun MuqtadiDashbaordPrev() {
-    MuqtadiDashboard("Noman", toReleSelectionScreen = {})
+    MuqtadiDashboard("Noman", toRoleSelectionScreen = {})
 
 }

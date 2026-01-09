@@ -1,7 +1,6 @@
 package com.durranitech.salahsync.presentation.imam.components
 
-import android.R.attr.maxLines
-import android.R.attr.text
+import android.R.id.message
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,19 +30,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAnnouncementScreen(
-    onNavigateBack: () -> Unit = {}, onPostAnnouncement: (String, String) -> Unit = { _, _ -> }
+    onNavigateBack: () -> Unit = {},
+    onPostAnnouncement: (String, String) -> Unit = { _, _ -> }
 ) {
     var title by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
@@ -52,21 +49,29 @@ fun CreateAnnouncementScreen(
         topBar = {
             TopAppBar(
                 title = {
-                Text(
-                    text = "New Announcement", fontSize = 20.sp, fontWeight = FontWeight.Medium
-                )
-            }, navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                    Text(
+                        text = "New Announcement",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium
                     )
-                }
-            }, colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFFAF9F6)
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
-            )
-        }, containerColor = Color(0xFFFAF9F6)
+
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
 
         Column(
@@ -74,15 +79,16 @@ fun CreateAnnouncementScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp)
-                .padding(top = 24.dp), verticalArrangement = Arrangement.Top
+                .padding(top = 16.dp),
+            verticalArrangement = Arrangement.Top
         ) {
 
+            // Title Section
             Column {
                 Text(
                     text = "Title",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -95,7 +101,8 @@ fun CreateAnnouncementScreen(
                         .height(60.dp),
                     placeholder = {
                         Text(
-                            text = "e.g., Special Jumu'ah Khutbah", color = Color.Gray
+                            text = "e.g., Special Jumu'ah Khutbah",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
                     shape = RoundedCornerShape(16.dp),
@@ -103,26 +110,23 @@ fun CreateAnnouncementScreen(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-
-
-                        ),
+                    ),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions( imeAction = ImeAction.Next )
-                    )
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Message Label
                 Text(
                     text = "Message",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -144,63 +148,40 @@ fun CreateAnnouncementScreen(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
                     maxLines = 8,
-                    keyboardOptions = KeyboardOptions( imeAction = ImeAction.Done )
-
-
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Post Announcement Button
             Button(
-                onClick = { onPostAnnouncement(title, message) },
+                onClick = {
+                    onPostAnnouncement(title, message)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.large,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                enabled = title.isNotEmpty() && message.isNotEmpty()
             ) {
                 Text(
                     text = "Post Announcement",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
-
-
                 )
             }
         }
     }
 }
 
-// Extension function to create dashed border
-fun Modifier.dashedBorder(
-    width: androidx.compose.ui.unit.Dp, color: Color, cornerRadius: androidx.compose.ui.unit.Dp
-) = this.then(
-    Modifier.drawWithContent {
-        drawContent()
-        val strokeWidth = width.toPx()
-        val dashWidth = 20f
-        val dashGap = 15f
-
-        drawRoundRect(
-            color = color, style = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = strokeWidth, pathEffect = PathEffect.dashPathEffect(
-                    intervals = floatArrayOf(dashWidth, dashGap), phase = 0f
-                )
-            ), cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius.toPx())
-        )
-    })
-
-@Preview
+@androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun PreviewNewAnnouncementScreen() {
     CreateAnnouncementScreen()
