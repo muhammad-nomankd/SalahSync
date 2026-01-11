@@ -96,4 +96,21 @@ dependencies {
 
     // Preferences DataStore
     implementation(libs.androidx.datastore.preferences)
+
+
+    //Testing
+
+    // JUnit 4 - The testing framework (REQUIRED)
+    testImplementation("junit:junit:4.13.2")
+
+    // Kotlin Coroutines Test - For testing StateFlow/Flow (REQUIRED for you)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // AndroidX Test - Core testing utilities
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    // Compose UI Testing (for Compose screens)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
 }

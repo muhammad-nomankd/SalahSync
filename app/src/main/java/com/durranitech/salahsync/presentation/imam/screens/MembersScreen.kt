@@ -67,7 +67,6 @@ fun MembersScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
     var showAddMember by remember { mutableStateOf(false) }
     var memberToDelete by remember { mutableStateOf<Member?>(null) }
 
