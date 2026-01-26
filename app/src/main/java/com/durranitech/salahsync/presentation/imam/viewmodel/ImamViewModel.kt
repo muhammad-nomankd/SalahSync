@@ -19,8 +19,8 @@ import com.durranitech.salahsync.domain.usecase.GetUpcommignPrayerTimeUseCase
 import com.durranitech.salahsync.presentation.imam.ImamIntent
 import com.durranitech.salahsync.presentation.imam.ImamUiState
 import com.durranitech.salahsync.util.Resource
-import com.durranitech.salahsync.util.getNextPrayerSimple
 import dagger.hilt.android.lifecycle.HiltViewModel
+import getNextPrayerSimple
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
