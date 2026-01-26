@@ -53,13 +53,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.durranitech.salahsync.domain.model.Member
 import com.durranitech.salahsync.presentation.imam.components.AddMemberScreen
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
+import formatDate
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
-
-/**
- * Screen for managing masjid members
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MembersScreen(
@@ -298,13 +295,4 @@ private fun DeleteConfirmationDialog(
             Text("Cancel")
         }
     })
-}
-
-
-/**
- * Format timestamp to readable date string
- */
-private fun formatDate(timestamp: Long): String {
-    val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    return formatter.format(java.util.Date(timestamp))
 }

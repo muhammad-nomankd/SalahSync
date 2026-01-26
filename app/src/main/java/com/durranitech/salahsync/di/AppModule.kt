@@ -1,7 +1,7 @@
 package com.durranitech.salahsync.di
 
 import android.content.Context
-import com.durranitech.salahsync.data.datastore.UserPreferencesManager
+import com.durranitech.salahsync.data.local.datastore.UserPreferencesManager
 import com.durranitech.salahsync.data.repository.AuthRepositoryImp
 import com.durranitech.salahsync.data.repository.ImamRepositoryImp
 import com.durranitech.salahsync.domain.repository.AuthRepository

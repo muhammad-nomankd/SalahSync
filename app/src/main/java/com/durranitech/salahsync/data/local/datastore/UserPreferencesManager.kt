@@ -1,4 +1,4 @@
-package com.durranitech.salahsync.data.datastore
+package com.durranitech.salahsync.data.local.datastore
 
 import android.content.Context
 import androidx.datastore.core.DataStore

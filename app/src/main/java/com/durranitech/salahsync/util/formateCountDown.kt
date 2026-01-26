@@ -1,5 +1,8 @@
 package com.durranitech.salahsync.util
 
+import android.annotation.SuppressLint
+
+@SuppressLint("DefaultLocale")
 fun formatCountdown(millis: Long): String {
     if (millis <= 0) return "00:00:00"
     val totalSeconds = millis / 1000

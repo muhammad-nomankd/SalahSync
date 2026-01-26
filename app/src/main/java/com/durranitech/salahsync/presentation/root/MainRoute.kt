@@ -1,7 +1,6 @@
-package com.durranitech.salahsync.presentation.navigation
+package com.durranitech.salahsync.presentation.root
 
 import SignInScreen
-import android.graphics.pdf.content.PdfPageGotoLinkContent
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +23,7 @@ import com.durranitech.salahsync.presentation.imam.screens.CreateMasjidScreen
 import com.durranitech.salahsync.presentation.imam.screens.ImamMainDashboard
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 import com.durranitech.salahsync.presentation.muqtadi.screens.MuqtadiDashboard
+import com.durranitech.salahsync.presentation.navigation.Destination
 import com.durranitech.salahsync.presentation.roleselection.screens.RoleSelectionScreen
 
 @Composable

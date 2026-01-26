@@ -1,6 +1,6 @@
 package com.durranitech.salahsync.data.repository
 
-import com.durranitech.salahsync.data.datastore.UserPreferencesManager
+import com.durranitech.salahsync.data.local.datastore.UserPreferencesManager
 import com.durranitech.salahsync.domain.model.User
 import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.domain.repository.AuthRepository
