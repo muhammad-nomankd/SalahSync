@@ -1,6 +1,7 @@
 package com.durranitech.salahsync.presentation.imam.screens
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.durranitech.salahsync.domain.model.Member
 import com.durranitech.salahsync.presentation.imam.components.AddMemberScreen
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
@@ -67,7 +70,7 @@ fun MembersScreen(
     var showAddMember by remember { mutableStateOf(false) }
     var memberToDelete by remember { mutableStateOf<Member?>(null) }
 
-    LaunchedEffect(state) {
+    LaunchedEffect(state.errorMessage) {
         state.successMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
@@ -87,14 +90,21 @@ fun MembersScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-        }, floatingActionButton = {
-            if (!showAddMember) {
+        },
+        floatingActionButton = {
+
                 FloatingActionButton(
-                    onClick = { showAddMember = true }) {
+                    onClick = { showAddMember = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    elevation = FloatingActionButtonDefaults.elevation(6.dp),
+                    modifier = Modifier.padding(bottom = 64.dp)
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Member")
                 }
-            }
-        })
+
+        }
+    )
     { padding ->
 
         memberToDelete?.let { member ->

@@ -103,15 +103,14 @@ class ImamViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             when (val result = getMasjidUseCase()) {
                 is Resource.Error -> _uiState.value = _uiState.value.copy(
-                    isLoading = false, errorMessage = "Masjid fetched successfully ✅"
+                    isLoading = false, errorMessage = "Failed to fetch masjid"
                 )
 
                 is Resource.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
                 is Resource.Success -> _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = null,
-                    masjid = result.data,
-                    successMessage = "Masjid fetched successfully ✅"
+                    masjid = result.data
                 )
             }
         }
@@ -124,8 +123,7 @@ class ImamViewModel @Inject constructor(
                     is Resource.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
                     is Resource.Success -> _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        masjid = result.data,
-                        successMessage = "Masjid details loaded ✅"
+                        masjid = result.data
                     )
 
                     is Resource.Error -> _uiState.value = _uiState.value.copy(
