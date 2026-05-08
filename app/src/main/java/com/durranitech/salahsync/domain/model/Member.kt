@@ -1,4 +1,6 @@
 package com.durranitech.salahsync.domain.model
+import kotlin.String
+
 
 data class Member(
     val id: String = "",

@@ -1,5 +1,6 @@
 package com.durranitech.salahsync.data.repository
 
+import android.util.Log
 import com.durranitech.salahsync.domain.model.Announcement
 import com.durranitech.salahsync.domain.model.Masjid
 import com.durranitech.salahsync.domain.model.Member
@@ -13,11 +14,11 @@ import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
 class ImamRepositoryImp(
-    private val firestore: FirebaseFirestore, private val firebaseAuth: FirebaseAuth
+    private val firestore: FirebaseFirestore, 
+    private val firebaseAuth: FirebaseAuth
 ) : ImamRepository {
 
     override suspend fun getMasjid(): Resource<Masjid> {
@@ -29,7 +30,9 @@ class ImamRepositoryImp(
                 firestore.collection("masjid").whereEqualTo("imamId", currentUser.uid).get().await()
 
             val masjid = querySnapshot.toObjects(Masjid::class.java).firstOrNull()
+            Log.d("SalahTime", "Masjid fetched successfully: $masjid")
             if (masjid != null) {
+                Log.d("SalahTime", "Masjid fetched successfully: $masjid")
                 Resource.Success(masjid)
             } else {
                 Resource.Error("No masjid found for this imam")
@@ -55,43 +58,46 @@ class ImamRepositoryImp(
             masjidRef.set(masjidWithId).await()
 
             Resource.Success(Unit)
-
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Unexpected error occurred while creating masjid")
         }
     }
 
+    override fun getMasjidDetails(): Flow<Resource<Masjid>> = callbackFlow {
+        trySend(Resource.Loading())
 
-    override fun getMasjidDetails(): Flow<Resource<Masjid>> = flow {
-        emit(Resource.Loading())
-
-        try {
-            val currentUser = firebaseAuth.currentUser
-            if (currentUser == null) {
-                emit(Resource.Error("User not authenticated"))
-                return@flow
-            }
-
-            val masjidSnapshot = firestore.collection("masjid").get().await()
-
-            if (masjidSnapshot.isEmpty) {
-                emit(Resource.Error("No masjid found for this Imam"))
-                return@flow
-            }
-
-            val masjid = masjidSnapshot.documents.first().toObject(Masjid::class.java)
-            if (masjid != null) {
-                emit(Resource.Success(masjid))
-            } else {
-                emit(Resource.Error("Failed to parse Masjid data"))
-            }
-
-        } catch (e: Exception) {
-            emit(Resource.Error(e.localizedMessage ?: "Unexpected error occurred"))
+        val currentUser = firebaseAuth.currentUser
+        if (currentUser == null) {
+            trySend(Resource.Error("User not authenticated"))
+            close()
+            return@callbackFlow
         }
+
+        val listener = firestore.collection("masjid")
+            .whereEqualTo("imamId", currentUser.uid)
+            .addSnapshotListener { querySnapshot, e ->
+                if (e != null) {
+                    trySend(Resource.Error(e.localizedMessage ?: "An unexpected error occurred"))
+                    return@addSnapshotListener
+                }
+
+                if (querySnapshot == null || querySnapshot.isEmpty) {
+                    trySend(Resource.Error("No masjid found for this Imam"))
+                    return@addSnapshotListener
+                }
+
+                val masjid = querySnapshot.documents.first().toObject(Masjid::class.java)
+                if (masjid != null) {
+                    trySend(Resource.Success(masjid))
+                    Log.d("SalahTime", "Masjid fetched successfully: $masjid")
+                } else {
+                    trySend(Resource.Error("Failed to parse Masjid data"))
+                }
+            }
+
+        awaitClose { listener.remove() }
     }
 
-    // Save/update prayer times as hour/minute fields
     override suspend fun updateMasjidPrayerTimes(prayer: SalahTime): Resource<Unit> {
         return try {
             val currentUser =
@@ -106,9 +112,9 @@ class ImamRepositoryImp(
 
             val masjidDocId = masjidQuery.documents.first().id
 
-            // Just save the SalahTime object—it will be mapped correctly
             firestore.collection("masjid").document(masjidDocId).update("salahTimes", prayer)
                 .await()
+            Log.d("SalahTime", "Salah times updated successfully: $prayer")
 
             Resource.Success(Unit)
         } catch (e: Exception) {
@@ -116,7 +122,6 @@ class ImamRepositoryImp(
         }
     }
 
-    // Fetch prayer times as hour/minute fields and map to SalahTime object
     override suspend fun getMasjidPrayerTimes(): Resource<SalahTime> {
         return try {
             val currentUser =
@@ -147,9 +152,9 @@ class ImamRepositoryImp(
                 jummahHour = (salahTimesMap["jummahHour"] as? Number)?.toInt() ?: 13,
                 jummahMinute = (salahTimesMap["jummahMinute"] as? Number)?.toInt() ?: 30
             )
-
+            Log.d("SalahTime", "Salah times fetched successfully: $salahTime")
+            Log.d("SalahTime", "Salah times fetched successfully: $salahTime")
             Resource.Success(salahTime)
-
         } catch (e: Exception) {
             Resource.Error(
                 e.localizedMessage ?: "An unexpected error occurred while fetching salah times"
@@ -157,10 +162,8 @@ class ImamRepositoryImp(
         }
     }
 
-
     override suspend fun addAnnouncements(announcement: Announcement): Resource<Unit> {
         return try {
-            Resource.Loading()
             val currentUser = firebaseAuth.currentUser ?: return Resource.Error("No user logged in")
 
             val masjidQuery =
@@ -174,13 +177,12 @@ class ImamRepositoryImp(
                     .document()
 
             val announcementWithId = announcement.copy(id = announcementRef.id)
-            announcementRef.set(announcementWithId)
+            announcementRef.set(announcementWithId).await()
+            Log.d("SalahTime", "Announcement added successfully: $announcement")
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unexpected error occurred while adding announcement")
         }
-
-
     }
 
     override suspend fun deleteAnnouncement(announcementId: String): Resource<Unit> {
@@ -205,7 +207,6 @@ class ImamRepositoryImp(
             Resource.Error(e.message ?: "An unexpected error occurred while deleting announcement")
         }
     }
-
 
     override suspend fun getAnnouncements(): Flow<Resource<List<Announcement>>> = callbackFlow {
         trySend(Resource.Loading())
@@ -238,10 +239,9 @@ class ImamRepositoryImp(
                                 )
                                 return@addSnapshotListener
                             }
-                            val annoucements =
+                            val announcements =
                                 snapshot?.toObjects(Announcement::class.java) ?: emptyList()
-                            trySend(Resource.Success(annoucements))
-
+                            trySend(Resource.Success(announcements))
                         }
             }.addOnFailureListener {
                 trySend(Resource.Error(it.localizedMessage ?: "Failed to fetch masjid"))
@@ -249,8 +249,6 @@ class ImamRepositoryImp(
             }
         awaitClose { listener?.remove() }
     }
-
-
 
     override suspend fun addMember(member: Member): Resource<Unit> {
         return try {
@@ -341,5 +339,4 @@ class ImamRepositoryImp(
             }
         awaitClose { listener?.remove() }
     }
-
 }

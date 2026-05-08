@@ -10,6 +10,7 @@ import com.durranitech.salahsync.domain.usecase.GetUserRoleUseCase
 import com.durranitech.salahsync.domain.usecase.SignInUseCase
 import com.durranitech.salahsync.domain.usecase.SignOutUseCase
 import com.durranitech.salahsync.domain.usecase.SignUpUseCase
+import com.durranitech.salahsync.domain.usecase.UnsubscribeFromMasjidUseCase
 import com.durranitech.salahsync.presentation.authentication.AuthIntent
 import com.durranitech.salahsync.presentation.authentication.AuthState
 import com.durranitech.salahsync.presentation.navigation.Destination
@@ -30,7 +31,7 @@ class AuthViewModel @Inject constructor(
     private val getUserRoleUseCase: GetUserRoleUseCase,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getUserDetailsUseCase: GetUserDetailsUseCase,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthState())
@@ -60,8 +61,11 @@ class AuthViewModel @Inject constructor(
                         is Resource.Success -> _state.value = _state.value.copy(
                             isLoading = false,
                             error = null,
+                            userId = result.data.id,
+                            masjid = result.data.masjid,
+                            masjidId = result.data.masjid?.id,
                             user = result.data,
-                            role = result.data?.role, // Set role from user data
+                            role = result.data.role,
                             isUserAuthenticated = true,
                             message = "Sign Up Successful"
                         )
@@ -83,11 +87,12 @@ class AuthViewModel @Inject constructor(
                     is Resource.Success -> {
                         val user = result.data
                         _state.value = _state.value.copy(
-                            user = user, isLoading = false, error = null, success = true
+                            user = user, isLoading = false, error = null, success = true, masjid = result.data.masjid,
+                            masjidId = result.data.masjid?.id, userId = result.data.id
                         )
 
                         // Fetch user role after successful sign-in
-                        user?.let {
+                        user.let {
                             // If user already has role (from Firestore fetch), use it
                             if (it.role != null) {
                                 _state.value = _state.value.copy(
@@ -148,17 +153,32 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    // In AuthViewModel - add this function
+    fun refreshUser() {
+        viewModelScope.launch {
+            getUserDetailsUseCase().collect { result ->
+                when (result) {
+                    is Resource.Loading -> { /* don't touch isLoading, silent refresh */ }
+                    is Resource.Success -> _state.value = _state.value.copy(
+                        user = result.data,
+                        error = null
+                    )
+                    is Resource.Error -> { /* silent fail, user already on dashboard */ }
+                }
+            }
+        }
+    }
+
     fun getUserRole(userId: String) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val result = getUserRoleUseCase(userId)
-            when (result) {
+            when (val result = getUserRoleUseCase(userId)) {
                 is Resource.Loading -> _state.value = _state.value.copy(isLoading = true)
                 is Resource.Success -> _state.value = _state.value.copy(
                     isLoading = false,
                     role = result.data,
                     error = null,
-                    isUserAuthenticated = true // Set authenticated when role is fetched
+                    isUserAuthenticated = true
                 )
 
                 is Resource.Error -> _state.value = _state.value.copy(
@@ -171,8 +191,7 @@ class AuthViewModel @Inject constructor(
     fun getCurrentUserId() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val result = getCurrentUserIdUseCase()
-            when (result) {
+            when (val result = getCurrentUserIdUseCase()) {
                 is Resource.Loading -> _state.value = _state.value.copy(isLoading = true)
                 is Resource.Error -> _state.value =
                     _state.value.copy(error = result.message, isLoading = false)
@@ -183,63 +202,36 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-    fun fetchUser() {
+    fun fetchUserAndDecideDestination() {
         viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+
             getUserDetailsUseCase().collect { result ->
                 when (result) {
-                    is Resource.Loading -> _state.value = _state.value.copy(
-                        isLoading = true,
-                        error = null
-                    )
-
-                    is Resource.Success -> _state.value = _state.value.copy(
-                        isLoading = false,
-                        user = result.data,
-                        error = null
-                    )
-
-                    is Resource.Error -> _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = result.message
-                    )
-                }
-            }
-        }
-    }
-
-
-    fun decideStartDestination() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val currentUser = firebaseAuth.currentUser
-            if (currentUser == null) {
-                _state.value = _state.value.copy(
-                    startDestination = Destination.RoleSelectionScreen, isLoading = false
-                )
-            } else {
-                val result = getUserRoleUseCase(currentUser.uid)
-                when (result) {
+                    is Resource.Loading -> {
+                        _state.value = _state.value.copy(isLoading = true, error = null)
+                    }
                     is Resource.Success -> {
-                        val destination = when (result.data) {
+                        val user = result.data
+                        val destination = when (user.role) {
                             UserRole.IMAM -> Destination.ImamDashboardScreen
                             UserRole.MUQTADI -> Destination.MuqtadiDashboardScreen
                             else -> Destination.RoleSelectionScreen
                         }
                         _state.value = _state.value.copy(
-                            startDestination = destination, role = result.data, isLoading = false
+                            isLoading = false,
+                            user = user,
+                            role = user.role,
+                            startDestination = destination,
+                            error = null
                         )
                     }
-
                     is Resource.Error -> {
                         _state.value = _state.value.copy(
+                            isLoading = false,
                             startDestination = Destination.RoleSelectionScreen,
-                            error = result.message,
-                            isLoading = false
+                            error = result.message
                         )
-                    }
-
-                    else -> {
-                        _state.value = _state.value.copy(isLoading = false)
                     }
                 }
             }

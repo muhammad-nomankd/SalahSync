@@ -1,5 +1,6 @@
 package com.durranitech.salahsync.presentation.authentication
 
+import com.durranitech.salahsync.domain.model.Masjid
 import com.durranitech.salahsync.domain.model.User
 import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.presentation.navigation.Destination
@@ -15,5 +16,7 @@ data class AuthState(
     val role: UserRole? = null,
     val userId: String? = null,
     val startDestination: Destination? = null,
-    val destination: Destination? = null
+    val destination: Destination? = null,
+    val masjid:Masjid? = Masjid(),
+    val masjidId:String? = null
 )

@@ -1,3 +1,5 @@
+package com.durranitech.salahsync.util
+
 import com.durranitech.salahsync.domain.model.NextPrayer
 import com.durranitech.salahsync.domain.model.SalahTime
 import java.util.Calendar
@@ -17,17 +19,17 @@ fun SalahTime.getNextPrayerSimple(): NextPrayer {
     }
 
     val todayPrayers = listOf(
-        "Fajr" to timeOf(fajrHour, fajrMinute),
-        "Zuhr" to timeOf(dhuhrHour, dhuhrMinute),
-        "Asr" to timeOf(asrHour, asrMinute),
-        "Maghrib" to timeOf(maghribHour, maghribMinute),
-        "Isha" to timeOf(ishaHour, ishaMinute)
+        "Fajr" to timeOf(fajrHour?:0, fajrMinute?:0),
+        "Zuhr" to timeOf(dhuhrHour?:0, dhuhrMinute?:0),
+        "Asr" to timeOf(asrHour?:0, asrMinute?:0),
+        "Maghrib" to timeOf(maghribHour?:0, maghribMinute?:0),
+        "Isha" to timeOf(ishaHour?:0, ishaMinute?:0)
     )
 
     val upcomingToday = todayPrayers.firstOrNull { it.second > now }
 
     val (name, time) = upcomingToday ?: run {
-        "Fajr" to timeOf(fajrHour, fajrMinute, addDay = true)
+        "Fajr" to timeOf(fajrHour?:0, fajrMinute?:0, addDay = true)
     }
 
     return NextPrayer(

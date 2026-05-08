@@ -4,9 +4,33 @@ import android.content.Context
 import com.durranitech.salahsync.data.local.datastore.UserPreferencesManager
 import com.durranitech.salahsync.data.repository.AuthRepositoryImp
 import com.durranitech.salahsync.data.repository.ImamRepositoryImp
+import com.durranitech.salahsync.data.repository.MuqtadiRepositoryImp
+import com.durranitech.salahsync.data.repository.NotificationRepositoryImp
 import com.durranitech.salahsync.domain.repository.AuthRepository
 import com.durranitech.salahsync.domain.repository.ImamRepository
-import com.durranitech.salahsync.domain.usecase.*
+import com.durranitech.salahsync.domain.repository.MuqtadiRepository
+import com.durranitech.salahsync.domain.repository.NotificationRepository
+import com.durranitech.salahsync.domain.usecase.AddAnnouncementUseCase
+import com.durranitech.salahsync.domain.usecase.AddMemberUseCase
+import com.durranitech.salahsync.domain.usecase.AddOrUpdateSalahTimesUseCase
+import com.durranitech.salahsync.domain.usecase.CreateMasjidUseCase
+import com.durranitech.salahsync.domain.usecase.DeleteAnnouncementUseCase
+import com.durranitech.salahsync.domain.usecase.DeleteMemberUseCase
+import com.durranitech.salahsync.domain.usecase.FetchMasjidDetailsUseCase
+import com.durranitech.salahsync.domain.usecase.GetAnnouncementsUseCase
+import com.durranitech.salahsync.domain.usecase.GetCurrentUserIdUseCase
+import com.durranitech.salahsync.domain.usecase.GetCurrentUserUseCase
+import com.durranitech.salahsync.domain.usecase.GetMasjidUseCase
+import com.durranitech.salahsync.domain.usecase.GetMembersUseCase
+import com.durranitech.salahsync.domain.usecase.GetMuqtadiAnnouncementsUseCase
+import com.durranitech.salahsync.domain.usecase.GetUpcomingPrayerTimeUseCase
+import com.durranitech.salahsync.domain.usecase.GetUserDetailsUseCase
+import com.durranitech.salahsync.domain.usecase.GetUserRoleUseCase
+import com.durranitech.salahsync.domain.usecase.SignInUseCase
+import com.durranitech.salahsync.domain.usecase.SignOutUseCase
+import com.durranitech.salahsync.domain.usecase.SignUpUseCase
+import com.durranitech.salahsync.domain.usecase.SubscribeToMasjidNotificationUseCase
+import com.durranitech.salahsync.domain.usecase.UnsubscribeFromMasjidUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -20,24 +44,33 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // ✅ FirebaseAuth
+    // FirebaseAuth
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
-    // ✅ Firestore
+    // Firestore
     @Provides
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    // ✅ DataStore Manager (fix name here)
+    // DataStore Manager (fix name here)
     @Provides
     @Singleton
     fun provideUserPreferencesManager(@ApplicationContext context: Context): UserPreferencesManager {
         return UserPreferencesManager(context)
     }
 
-    // ✅ Auth Repository
+    //Muqtadi Repository
+    @Provides
+    @Singleton
+    fun providesMuqtadiRepository(
+        firebaseAuth: FirebaseAuth, firestore: FirebaseFirestore
+    ): MuqtadiRepository {
+        return MuqtadiRepositoryImp(firebaseAuth, firestore)
+    }
+
+    // Auth Repository
     @Provides
     @Singleton
     fun provideAuthRepository(
@@ -48,7 +81,8 @@ object AppModule {
         return AuthRepositoryImp(firebaseAuth, firebaseFirestore, userPreferencesManager)
     }
 
-    // ✅ Auth-related UseCases
+
+    // Auth-related UseCases
     @Provides
     @Singleton
     fun provideSignInUseCase(repository: AuthRepository) = SignInUseCase(repository)
@@ -71,61 +105,103 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGetCurrentUserIdUseCase(repository: AuthRepository) = GetCurrentUserIdUseCase(repository)
+    fun provideGetCurrentUserIdUseCase(repository: AuthRepository) =
+        GetCurrentUserIdUseCase(repository)
 
     @Provides
     @Singleton
     fun getUserDetailUseCase(repository: AuthRepository) = GetUserDetailsUseCase(repository)
 
-    // ✅ Imam Repository
+    // Imam Repository
     @Provides
     @Singleton
     fun provideImamRepository(
-        firebaseFirestore: FirebaseFirestore,
-        firebaseAuth: FirebaseAuth
+        firebaseFirestore: FirebaseFirestore, firebaseAuth: FirebaseAuth
     ): ImamRepository {
         return ImamRepositoryImp(firebaseFirestore, firebaseAuth)
     }
 
-    // ✅ Imam UseCases
+    // Imam UseCases
     @Provides
     @Singleton
     fun provideCreateMasjidUseCase(repository: ImamRepository) = CreateMasjidUseCase(repository)
 
+    // Get masjid UseCases
     @Provides
     @Singleton
     fun provideGetMasjidUseCase(repository: ImamRepository) = GetMasjidUseCase(repository)
 
+    // Add/Update Salah Times UseCases
     @Provides
     @Singleton
-    fun addOrUpdateSalahTimeUseCase(repository: ImamRepository) = AddOrUpdateSalahTimesUseCase(repository)
+    fun addOrUpdateSalahTimeUseCase(repository: ImamRepository) =
+        AddOrUpdateSalahTimesUseCase(repository)
 
+    // Get Salah Times UseCases
     @Provides
     @Singleton
-    fun getSalahTimesUseCase(repository: ImamRepository) = GetUpcommignPrayerTimeUseCase(repository)
+    fun getSalahTimesUseCase(repository: ImamRepository) = GetUpcomingPrayerTimeUseCase(repository)
 
+    // Announcement UseCases
     @Provides
     @Singleton
     fun addAnnouncementUseCase(repository: ImamRepository) = AddAnnouncementUseCase(repository)
 
+    // Get Announcements UseCases
     @Provides
     @Singleton
     fun getAnnouncementsUseCase(repository: ImamRepository) = GetAnnouncementsUseCase(repository)
 
+    // Delete Announcement UseCases
     @Provides
     @Singleton
-    fun deleteAnnouncementUseCase(repository: ImamRepository) = DeleteAnnouncementUseCase(repository)
+    fun deleteAnnouncementUseCase(repository: ImamRepository) =
+        DeleteAnnouncementUseCase(repository)
 
+    // Add Member UseCase
     @Provides
     @Singleton
     fun addMemberUseCase(repository: ImamRepository) = AddMemberUseCase(repository)
 
+    // Delete Member UseCase
     @Provides
     @Singleton
     fun deleteMemberUseCase(repository: ImamRepository) = DeleteMemberUseCase(repository)
 
+    // Get Members UseCase
     @Provides
     @Singleton
     fun getMembersUseCase(repository: ImamRepository) = GetMembersUseCase(repository)
 
+
+    //Create masjid
+    // Fetch masjid details UseCase
+    @Provides
+    @Singleton
+    fun fetchMasjidDetailsUseCase(repository: MuqtadiRepository) = FetchMasjidDetailsUseCase(
+        repository = repository
+    )
+
+    //Fetch announcements for muqtadi
+    @Provides
+    @Singleton
+    fun fetchMuqtadiAnnouncements(repository: MuqtadiRepository) =
+        GetMuqtadiAnnouncementsUseCase(repository)
+
+
+    @Provides
+    @Singleton
+    fun providesNotificationRepository(): NotificationRepository {
+        return NotificationRepositoryImp()
+    }
+
+    @Provides
+    @Singleton
+    fun providesSubscribeToMasjidNotificationUseCase(repository: NotificationRepository) =
+        SubscribeToMasjidNotificationUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun providesUnsubscribeFromMasjidUseCase(repository: NotificationRepository) =
+        UnsubscribeFromMasjidUseCase(repository)
 }

@@ -1,134 +1,176 @@
 package com.durranitech.salahsync.presentation.imam.components
+
+// ── EmptyAnnouncementScreen.kt ─────────────────────────────────────────────
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.outlined.Mosque
+import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.durranitech.salahsync.ui.theme.SalahSyncTheme
+
+private val GreenPrimary = Color(0xFF1B8C5E)
+private val GreenLight   = Color(0xFF26A874)
+private val GreenSurface = Color(0xFFE8F5EF)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EmptyAnnouncementScreen
+// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 fun EmptyAnnouncementScreen(
     onAddNewAnnouncement: () -> Unit = {},
     onManageMasjidData: () -> Unit = {}
 ) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE8E8E8))
-            .padding(16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
-        // Main Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFF5F5F5)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        // ── Animated icon illustration ───────────────────────────────────────
+        AnimatedVisibility(
+            visible = visible,
+            enter = scaleIn(tween(500)) + fadeIn(tween(500))
         ) {
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                // Icon Circle
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .background(
-                            color = Color(0xFFB8D4C8),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = null,
-                        tint = Color(0xFF2D5F4B),
-                        modifier = Modifier.size(36.dp)
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(GreenSurface, GreenSurface.copy(alpha = 0.3f))
+                        )
                     )
-                }
+                    .border(2.dp, GreenPrimary.copy(alpha = 0.2f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Campaign,
+                    contentDescription = null,
+                    tint = GreenPrimary,
+                    modifier = Modifier.size(52.dp)
+                )
+            }
+        }
 
-                Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(28.dp))
 
-                // No announcements text
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(500, delayMillis = 100))
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "No announcements yet.",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
+                    text = "No announcements yet",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Description text
+                Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "Share important updates with your\ncommunity!",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray,
+                    text = "Keep your community informed by sharing\nimportant masjid updates.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
+                    lineHeight = 22.sp
                 )
+            }
+        }
 
-                Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(36.dp))
 
-                // Add New Announcement Button
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(500, delayMillis = 200))
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Button(
                     onClick = onAddNewAnnouncement,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2D6A4F)
-                    )
+                        .height(54.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
                 ) {
+                    Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Add New Announcement",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White
+                        text = "Add Announcement",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Manage Masjid Data Button
-                Button(
+                OutlinedButton(
                     onClick = onManageMasjidData,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFB8D4C8)
+                        .height(54.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.5.dp, GreenPrimary.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = GreenPrimary
                     )
                 ) {
                     Text(
                         text = "Manage Masjid Data",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF2D5F4B)
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -136,8 +178,19 @@ fun EmptyAnnouncementScreen(
     }
 }
 
+
+
+
+// ─── Previews ─────────────────────────────────────────────────────────────────
+
 @Preview(showBackground = true)
 @Composable
-fun PreviewPastAnnouncementsScreen() {
-    EmptyAnnouncementScreen()
+private fun EmptyAnnouncementPreview() {
+    SalahSyncTheme { EmptyAnnouncementScreen() }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun EmptyMasjidPreview() {
+    SalahSyncTheme { EmptyMasjidPlaceholder() }
 }

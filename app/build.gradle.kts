@@ -1,17 +1,15 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.legacy.kapt)
     id("com.google.dagger.hilt.android")
-    kotlin("kapt")
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.kotlin.serialization)
-
 }
 
 android {
     namespace = "com.durranitech.salahsync"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.durranitech.salahsync"
@@ -27,17 +25,13 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -88,7 +82,7 @@ dependencies {
 
     //Icons
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material:material:1.7.8")
 
 
     // Navigation
@@ -104,13 +98,28 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 
     // Kotlin Coroutines Test - For testing StateFlow/Flow (REQUIRED for you)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 
     // AndroidX Test - Core testing utilities
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 
     // Compose UI Testing (for Compose screens)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.10.6")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.10.6")
+
+    // QR Scanning (Camera + ML Kit)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.accompanist.permissions)
+
+    // QR Generation
+    implementation(libs.zxing.core)
+
+    //FCM
+    implementation(libs.firebase.messaging)
+
+
 }

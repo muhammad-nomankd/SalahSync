@@ -1,6 +1,11 @@
 package com.durranitech.salahsync.presentation.imam.components
 
 import android.app.TimePickerDialog
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,36 +17,46 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
@@ -51,6 +66,28 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+// ─── Colors ───────────────────────────────────────────────────────────────────
+private val GreenPrimary = Color(0xFF1B8C5E)
+private val GreenLight   = Color(0xFF26A874)
+private val GreenSurface = Color(0xFFE8F5EF)
+
+// ─── Prayer metadata ──────────────────────────────────────────────────────────
+private data class PrayerMeta(
+    val name: String,
+    val emoji: String,
+    val accentColor: Color
+)
+
+private val prayerMeta = listOf(
+    PrayerMeta("Fajr",    "🌄", Color(0xFF5C6BC0)),
+    PrayerMeta("Dhuhr",   "☀️",  GreenPrimary),
+    PrayerMeta("Asr",     "🌤️",  Color(0xFFFFA726)),
+    PrayerMeta("Maghrib", "🌅", Color(0xFFE57373)),
+    PrayerMeta("Isha",    "🌙", Color(0xFF7E57C2)),
+    PrayerMeta("Jummah",  "🕌", GreenLight)
+)
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,358 +97,342 @@ fun AddUpdateSalahTimingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var fajrHour by rememberSaveable { mutableIntStateOf(0) }
-    var fajrMinute by rememberSaveable { mutableIntStateOf(0) }
-    var dhuhrHour by rememberSaveable { mutableIntStateOf(0) }
+    var fajrHour    by rememberSaveable { mutableIntStateOf(0) }
+    var fajrMinute  by rememberSaveable { mutableIntStateOf(0) }
+    var dhuhrHour   by rememberSaveable { mutableIntStateOf(0) }
     var dhuhrMinute by rememberSaveable { mutableIntStateOf(0) }
-    var asrHour by rememberSaveable { mutableIntStateOf(0) }
-    var asrMinute by rememberSaveable { mutableIntStateOf(0) }
-    var maghribHour by rememberSaveable { mutableIntStateOf(0) }
+    var asrHour     by rememberSaveable { mutableIntStateOf(0) }
+    var asrMinute   by rememberSaveable { mutableIntStateOf(0) }
+    var maghribHour   by rememberSaveable { mutableIntStateOf(0) }
     var maghribMinute by rememberSaveable { mutableIntStateOf(0) }
-    var ishaHour by rememberSaveable { mutableIntStateOf(0) }
-    var ishaMinute by rememberSaveable { mutableIntStateOf(0) }
-    var jummahHour by rememberSaveable { mutableIntStateOf(0) }
-    var jummahMinute by rememberSaveable { mutableIntStateOf(0) }
+    var ishaHour    by rememberSaveable { mutableIntStateOf(0) }
+    var ishaMinute  by rememberSaveable { mutableIntStateOf(0) }
+    var jummahHour    by rememberSaveable { mutableIntStateOf(0) }
+    var jummahMinute  by rememberSaveable { mutableIntStateOf(0) }
 
-    var hasInitialized by rememberSaveable { mutableIntStateOf(0) }
-
-    if (hasInitialized == 0 && state.salahTime != null && !state.isLoading) {
-        val t = state.salahTime ?: SalahTime()
-        fajrHour = t.fajrHour
-        fajrMinute = t.fajrMinute
-        dhuhrHour = t.dhuhrHour
-        dhuhrMinute = t.dhuhrMinute
-        asrHour = t.asrHour
-        asrMinute = t.asrMinute
-        maghribHour = t.maghribHour
-        maghribMinute = t.maghribMinute
-        ishaHour = t.ishaHour
-        ishaMinute = t.ishaMinute
-        jummahHour = t.jummahHour
-        jummahMinute = t.jummahMinute
-        hasInitialized = 1
+    // ✅ One-time initialisation from saved Firestore data
+    var hasInitialized by rememberSaveable { mutableStateOf(false) }
+    if (!hasInitialized && state.salahTime != null && !state.isLoading) {
+        val t = state.salahTime!!
+        fajrHour = t.fajrHour ?: 0;     fajrMinute  = t.fajrMinute ?: 0
+        dhuhrHour = t.dhuhrHour ?: 0;   dhuhrMinute = t.dhuhrMinute ?: 0
+        asrHour = t.asrHour ?: 0;       asrMinute   = t.asrMinute ?: 0
+        maghribHour = t.maghribHour ?: 0; maghribMinute = t.maghribMinute ?: 0
+        ishaHour = t.ishaHour ?: 0;     ishaMinute  = t.ishaMinute ?: 0
+        jummahHour = t.jummahHour ?: 0; jummahMinute = t.jummahMinute ?: 0
+        hasInitialized = true
     }
+
+    // Entrance animation
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
+    val prayers = listOf(
+        Triple(fajrHour,    fajrMinute,    { h: Int, m: Int -> fajrHour = h;    fajrMinute = m }),
+        Triple(dhuhrHour,   dhuhrMinute,   { h: Int, m: Int -> dhuhrHour = h;   dhuhrMinute = m }),
+        Triple(asrHour,     asrMinute,     { h: Int, m: Int -> asrHour = h;     asrMinute = m }),
+        Triple(maghribHour, maghribMinute, { h: Int, m: Int -> maghribHour = h; maghribMinute = m }),
+        Triple(ishaHour,    ishaMinute,    { h: Int, m: Int -> ishaHour = h;    ishaMinute = m }),
+        Triple(jummahHour,  jummahMinute,  { h: Int, m: Int -> jummahHour = h;  jummahMinute = m })
+    )
 
     Scaffold(
         topBar = {
-            SalahTimesTopAppBar(
-                onNavigateBack = {onNavigateBackToHomeScreen()}
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.surface
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            SalahTimesCard(
-                isLoading = state.isLoading,
-                prayers = listOf(
-                    Pair("Fajr", PrayerTimeState(fajrHour, fajrMinute) { h, m ->
-                        fajrHour = h
-                        fajrMinute = m
-                    }),
-                    Pair("Dhuhr", PrayerTimeState(dhuhrHour, dhuhrMinute) { h, m ->
-                        dhuhrHour = h
-                        dhuhrMinute = m
-                    }),
-                    Pair("Asr", PrayerTimeState(asrHour, asrMinute) { h, m ->
-                        asrHour = h
-                        asrMinute = m
-                    }),
-                    Pair("Maghrib", PrayerTimeState(maghribHour, maghribMinute) { h, m ->
-                        maghribHour = h
-                        maghribMinute = m
-                    }),
-                    Pair("Isha", PrayerTimeState(ishaHour, ishaMinute) { h, m ->
-                        ishaHour = h
-                        ishaMinute = m
-                    }),
-                    Pair("Jummah", PrayerTimeState(jummahHour, jummahMinute) { h, m ->
-                        jummahHour = h
-                        jummahMinute = m
-                    })
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "Prayer Times",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Set daily salah schedule",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBackToHomeScreen) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                contentDescription = "Back",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
-
-            state.takeIf { !it.isLoading && it.nextPrayerName != null && it.nextPrayerTime != null }
-                ?.let { nonNullState ->
-                    Spacer(modifier = Modifier.height(16.dp))
-                    NextPrayerCard(
-                        prayerName = nonNullState.nextPrayerName!!,
-                        prayerTime = nonNullState.nextPrayerTime!!,
-                        timeUntilPrayer = nonNullState.timeUntilPrayer ?: 0L
-                    )
-                }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            UpdateButton(
-                isLoading = state.isLoading,
-                onClick = {
-                    val salahTimes = SalahTime(
-                        fajrHour = fajrHour,
-                        fajrMinute = fajrMinute,
-                        dhuhrHour = dhuhrHour,
-                        dhuhrMinute = dhuhrMinute,
-                        asrHour = asrHour,
-                        asrMinute = asrMinute,
-                        maghribHour = maghribHour,
-                        maghribMinute = maghribMinute,
-                        ishaHour = ishaHour,
-                        ishaMinute = ishaMinute,
-                        jummahHour = jummahHour,
-                        jummahMinute = jummahMinute
-                    )
-                    viewModel.updatePrayerTimes(salahTimes)
-                }
-            )
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
- fun SalahTimesTopAppBar(onNavigateBack: () -> Unit) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = "Update Salah Times",
-                style = MaterialTheme.typography.titleLarge
-            )
         },
-        navigationIcon = {
-            IconButton(onClick = onNavigateBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate back"
-                )
-            }
-        },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    )
-}
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
 
-@Composable
-private fun SalahTimesCard(
-    isLoading: Boolean,
-    prayers: List<Pair<String, PrayerTimeState>>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = MaterialThemeElevation.level1)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp)
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(tween(400)) + slideInVertically(tween(400)) { it / 16 }
         ) {
-            if (isLoading) {
-                Box(
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // ── Next prayer info banner ──────────────────────────────────
+                state.takeIf { !it.isLoading && it.nextPrayerName != null && it.nextPrayerTime != null }
+                    ?.let {
+                        NextPrayerBanner(
+                            prayerName      = it.nextPrayerName!!,
+                            prayerTime      = it.nextPrayerTime!!,
+                            timeUntilPrayer = it.timeUntilPrayer ?: 0L
+                        )
+                    }
+
+                // ── Prayer times card ────────────────────────────────────────
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    if (state.isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = GreenPrimary, strokeWidth = 2.dp)
+                        }
+                    } else {
+                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                            prayers.forEachIndexed { index, (hour, minute, onPicked) ->
+                                val meta = prayerMeta[index]
+                                PrayerTimeRow(
+                                    meta     = meta,
+                                    hour     = hour,
+                                    minute   = minute,
+                                    onPicked = onPicked
+                                )
+                                if (index < prayers.size - 1) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── Save button ──────────────────────────────────────────────
+                Button(
+                    onClick = {
+                        viewModel.updatePrayerTimes(
+                            SalahTime(
+                                fajrHour = fajrHour, fajrMinute = fajrMinute,
+                                dhuhrHour = dhuhrHour, dhuhrMinute = dhuhrMinute,
+                                asrHour = asrHour, asrMinute = asrMinute,
+                                maghribHour = maghribHour, maghribMinute = maghribMinute,
+                                ishaHour = ishaHour, ishaMinute = ishaMinute,
+                                jummahHour = jummahHour, jummahMinute = jummahMinute
+                            )
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                        .height(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    enabled = !state.isLoading
                 ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
-                    prayers.forEach { (name, state) ->
-                        PrayerTimeRow(
-                            name = name,
-                            hour = state.hour,
-                            minute = state.minute,
-                            onTimeSelected = state.onTimeSelected
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text("Saving…", color = Color.White.copy(alpha = 0.8f))
+                    } else {
+                        Text(
+                            text = "Save Prayer Times",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
+
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
 }
 
+// ─── Next Prayer Banner ───────────────────────────────────────────────────────
+
 @Composable
-private fun NextPrayerCard(
+private fun NextPrayerBanner(
     prayerName: String,
     prayerTime: Long,
     timeUntilPrayer: Long
 ) {
     val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
     val formattedTime = formatter.format(java.util.Date(prayerTime))
-    val hours = TimeUnit.MILLISECONDS.toHours(timeUntilPrayer)
+    val hours   = TimeUnit.MILLISECONDS.toHours(timeUntilPrayer)
     val minutes = TimeUnit.MILLISECONDS.toMinutes(timeUntilPrayer) % 60
+    val countdown = if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = MaterialThemeElevation.level1)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Next Prayer",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "$prayerName at $formattedTime",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Time until: ${hours}h ${minutes}m",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun UpdateButton(
-    isLoading: Boolean,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        enabled = !isLoading,
-        shape = MaterialTheme.shapes.large
+            .background(
+                Brush.linearGradient(listOf(GreenPrimary, GreenLight)),
+                RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                strokeWidth = 2.dp,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        } else {
-            Text(
-                text = "Update Timings",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Next Prayer",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = 0.75f)
+                )
+                Text(
+                    text = prayerName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = formattedTime,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(text = "⏱", fontSize = 20.sp)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "in $countdown",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            }
         }
     }
 }
+
+// ─── Prayer Time Row ──────────────────────────────────────────────────────────
 
 @Composable
 private fun PrayerTimeRow(
-    name: String,
+    meta: PrayerMeta,
     hour: Int,
     minute: Int,
-    onTimeSelected: (Int, Int) -> Unit
+    onPicked: (Int, Int) -> Unit
 ) {
     val context = LocalContext.current
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = name,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        // Icon + name
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(meta.accentColor.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = meta.emoji, fontSize = 20.sp)
+            }
+            Text(
+                text = meta.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
 
+        // Time picker button
         OutlinedButton(
             onClick = {
-                showTimePicker(
-                    context = context,
-                    currentHour = hour,
-                    currentMinute = minute,
-                    onPicked = onTimeSelected
-                )
+                TimePickerDialog(
+                    context,
+                    { _, h, m -> onPicked(h, m) },
+                    hour, minute, false
+                ).show()
             },
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            ),
-            shape = MaterialTheme.shapes.large
+            shape = RoundedCornerShape(10.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (hour != 0 || minute != 0) GreenPrimary
+                else MaterialTheme.colorScheme.outlineVariant
+            )
         ) {
             Text(
                 text = formatTimeFromHourMinute(hour, minute),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = if (hour != 0 || minute != 0) GreenPrimary
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(Modifier.width(6.dp))
             Icon(
                 imageVector = Icons.Outlined.AccessTime,
-                contentDescription = "Select time",
-                modifier = Modifier.size(20.dp)
+                contentDescription = "Pick time",
+                modifier = Modifier.size(16.dp),
+                tint = if (hour != 0 || minute != 0) GreenPrimary
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         }
     }
 }
 
-private fun showTimePicker(
-    context: android.content.Context,
-    currentHour: Int,
-    currentMinute: Int,
-    onPicked: (Int, Int) -> Unit
-) {
-    TimePickerDialog(
-        context,
-        { _, hour, minute -> onPicked(hour, minute) },
-        currentHour,
-        currentMinute,
-        false
-    ).show()
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 private fun formatTimeFromHourMinute(hour: Int, minute: Int): String {
-    val calendar = Calendar.getInstance().apply {
+    val cal = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, hour)
         set(Calendar.MINUTE, minute)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
     }
-    val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
-    return formatter.format(calendar.time)
+    return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(cal.time)
 }
 
-
-private data class PrayerTimeState(
-    val hour: Int,
-    val minute: Int,
-    val onTimeSelected: (Int, Int) -> Unit
-)
-
-private object MaterialThemeElevation {
-    val level0 = 0.dp
-    val level1 = 1.dp
-    val level2 = 3.dp
-    val level3 = 6.dp
-    val level4 = 8.dp
-    val level5 = 12.dp
-}
+private data class PrayerTimeState(val hour: Int, val minute: Int, val onTimeSelected: (Int, Int) -> Unit)
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewAddUpdateSalahTimesScreen() {
-    SalahSyncTheme {
-        AddUpdateSalahTimingsScreen()
-    }
+private fun PreviewSalahTimings() {
+    SalahSyncTheme { AddUpdateSalahTimingsScreen() }
 }

@@ -1,9 +1,11 @@
 package com.durranitech.salahsync.data.repository
 
+import android.util.Log
 import com.durranitech.salahsync.data.local.datastore.UserPreferencesManager
 import com.durranitech.salahsync.domain.model.User
 import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.domain.repository.AuthRepository
+import com.durranitech.salahsync.domain.usecase.UnsubscribeFromMasjidUseCase
 import com.durranitech.salahsync.util.Resource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,7 +20,8 @@ import kotlinx.coroutines.tasks.await
 class AuthRepositoryImp(
     private val firebaseAuth: FirebaseAuth,
     private val firebaseFirestore: FirebaseFirestore,
-    private val prefs: UserPreferencesManager
+    private val prefs: UserPreferencesManager,
+
 ) : AuthRepository {
 
     override fun signUp(
@@ -163,6 +166,7 @@ class AuthRepositoryImp(
 
     override suspend fun getUserDetails(): Flow<Resource<User>> = flow {
         emit(Resource.Loading())
+        Log.d("AuthRepositoryImp", "Fetching user details ${Resource.Loading()}")
         try {
             val userId = firebaseAuth.currentUser?.uid ?: throw Exception("User not logged in")
             val snapshot = firebaseFirestore.collection("users")

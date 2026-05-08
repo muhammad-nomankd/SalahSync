@@ -1,15 +1,15 @@
 package com.durranitech.salahsync.domain.model
 data class SalahTime(
-    val fajrHour: Int = 5,
-    val fajrMinute: Int = 30,
-    val dhuhrHour: Int = 12,
-    val dhuhrMinute: Int = 30,
-    val asrHour: Int = 15,
-    val asrMinute: Int = 45,
-    val maghribHour: Int = 18,
-    val maghribMinute: Int = 15,
-    val ishaHour: Int = 20,
-    val ishaMinute: Int = 0,
-    val jummahHour: Int = 13,
-    val jummahMinute: Int = 30
+    val fajrHour: Int? = null,
+    val fajrMinute: Int? = null,
+    val dhuhrHour: Int? = null,
+    val dhuhrMinute: Int? = null,
+    val asrHour: Int? = null,
+    val asrMinute: Int? = null,
+    val maghribHour: Int? = null,
+    val maghribMinute: Int? = null,
+    val ishaHour: Int? = null,
+    val ishaMinute: Int? = null,
+    val jummahHour: Int? = null,
+    val jummahMinute: Int? = null
 )

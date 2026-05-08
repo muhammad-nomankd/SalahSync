@@ -1,5 +1,7 @@
 package com.durranitech.salahsync.domain.model
 
+import kotlin.String
+
 data class Masjid(
     val id: String = "",
     val name: String = "",
