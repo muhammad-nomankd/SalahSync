@@ -1,8 +1,11 @@
 package com.durranitech.salahsync.presentation.muqtadi.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,10 +18,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Mosque
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,19 +37,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.ui.theme.SalahSyncTheme
 
-// ─── Colors (same palette as Muqtadi dashboard) ───────────────────────────────
 private val BluePrimary = Color(0xFF1E40AF)
 private val BlueLight = Color(0xFF3B82F6)
 private val BlueSurface = Color(0xFFEFF6FF)
-private val BlueText = Color(0xFF1D4ED8)
-private val DeleteRed = Color(0xFFE53935)
-
-
-// ─── JoinMasjidScreen ─────────────────────────────────────────────────────────
+private val GreenPrimary = Color(0xFF1B8C5E)
 
 @Composable
 fun JoinMasjidScreen(
     onJoinMasjid: () -> Unit,
+    onScanQr: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -56,7 +58,8 @@ fun JoinMasjidScreen(
             modifier = Modifier.padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icon circle
+
+            // ── Icon ────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -73,6 +76,7 @@ fun JoinMasjidScreen(
 
             Spacer(Modifier.height(22.dp))
 
+            // ── Title ───────────────────────────────────────────────────────
             Text(
                 text = "No masjid joined yet",
                 style = MaterialTheme.typography.titleLarge,
@@ -93,13 +97,45 @@ fun JoinMasjidScreen(
 
             Spacer(Modifier.height(28.dp))
 
+            // ── Primary: Scan QR ────────────────────────────────────────────
             Button(
+                onClick = onScanQr,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.QrCodeScanner,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "Scan QR code",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── "or" divider ────────────────────────────────────────────────
+            OrDivider()
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Secondary: Browse list ───────────────────────────────────────
+            OutlinedButton(
                 onClick = onJoinMasjid,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BluePrimary)
+                // ✅ OutlinedButtonDefaults.colors() — correct API
+
+                border = BorderStroke(1.dp, BluePrimary.copy(alpha = 0.5f))
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -113,15 +149,32 @@ fun JoinMasjidScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+            // ✅ NO second OutlinedButton below — that was the duplicate causing the issue
         }
     }
 }
 
+@Composable
+private fun OrDivider() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f), thickness = 0.5.dp)
+        Text(
+            text = "or",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f), thickness = 0.5.dp)
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
 fun JoinMasjidScreenPreview() {
     SalahSyncTheme {
-        JoinMasjidScreen(onJoinMasjid = {})
+        JoinMasjidScreen(onJoinMasjid = {}, onScanQr = {})
     }
 }

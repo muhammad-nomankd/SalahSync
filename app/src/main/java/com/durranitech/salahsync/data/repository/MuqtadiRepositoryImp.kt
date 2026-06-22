@@ -17,8 +17,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 
 class MuqtadiRepositoryImp(
-    private val firebaseAuth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firebaseAuth: FirebaseAuth, private val firestore: FirebaseFirestore
 ) : MuqtadiRepository {
 
     override suspend fun fetchMasjidDetails(masjidId: String): Flow<Resource<Masjid>> = flow {
@@ -31,11 +30,7 @@ class MuqtadiRepositoryImp(
                 return@flow
             }
 
-            val snapshot = firestore
-                .collection("masjid")
-                .document(masjidId)
-                .get()
-                .await()
+            val snapshot = firestore.collection("masjid").document(masjidId).get().await()
 
             if (!snapshot.exists()) {
                 emit(Resource.Error("Masjid not found"))
@@ -55,14 +50,7 @@ class MuqtadiRepositoryImp(
 
     override suspend fun getMasjidPrayerTimes(masjidId: String): Resource<SalahTime> {
         return try {
-            val currentUser =
-                firebaseAuth.currentUser ?: return Resource.Error("User not authenticated")
-
-            // FIXED: Query by masjidId document, not by imamId field
-            val masjidDoc = firestore.collection("masjid")
-                .document(masjidId)
-                .get()
-                .await()
+            val masjidDoc = firestore.collection("masjid").document(masjidId).get().await()
 
             if (!masjidDoc.exists()) {
                 return Resource.Error("Masjid not found.")
@@ -106,11 +94,8 @@ class MuqtadiRepositoryImp(
 
         var listener: ListenerRegistration? = null
 
-        listener = firestore.collection("masjid")
-            .document(masjidId)
-            .collection("members")
-            .orderBy("joinedDate", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, e ->
+        listener = firestore.collection("masjid").document(masjidId).collection("members")
+            .orderBy("joinedDate", Query.Direction.DESCENDING).addSnapshotListener { snapshot, e ->
                 if (e != null) {
                     trySend(Resource.Error(e.localizedMessage ?: "An unexpected error occurred"))
                     return@addSnapshotListener
@@ -122,28 +107,28 @@ class MuqtadiRepositoryImp(
         awaitClose { listener.remove() }
     }
 
-    override suspend fun getAnnouncements(masjidId: String): Flow<Resource<List<Announcement>>> = callbackFlow {
-        trySend(Resource.Loading())
-        val currentUser = firebaseAuth.currentUser
-        if (currentUser == null) {
-            trySend(Resource.Error("User not authenticated"))
-            close()
-            return@callbackFlow
-        }
+    override suspend fun getAnnouncements(masjidId: String): Flow<Resource<List<Announcement>>> =
+        callbackFlow {
+            trySend(Resource.Loading())
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser == null) {
+                trySend(Resource.Error("User not authenticated"))
+                close()
+                return@callbackFlow
+            }
 
-        var listener: ListenerRegistration? = null
+            var listener: ListenerRegistration? = null
 
-        firestore.collection("masjid").whereEqualTo("imamId", masjidId).get()
-            .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    trySend(Resource.Error("Masjid not found"))
-                    close()
-                    return@addOnSuccessListener
-                }
-                val masjidDocId = querySnapshot.documents.first().id
-                listener =
-                    firestore.collection("masjid").document(masjidDocId).collection("announcements")
-                        .orderBy("date", Query.Direction.DESCENDING)
+            firestore.collection("masjid").whereEqualTo("imamId", masjidId).get()
+                .addOnSuccessListener { querySnapshot ->
+                    if (querySnapshot.isEmpty) {
+                        trySend(Resource.Error("Masjid not found"))
+                        close()
+                        return@addOnSuccessListener
+                    }
+                    val masjidDocId = querySnapshot.documents.first().id
+                    listener = firestore.collection("masjid").document(masjidDocId)
+                        .collection("announcements").orderBy("date", Query.Direction.DESCENDING)
                         .addSnapshotListener { snapshot, e ->
                             if (e != null) {
                                 trySend(
@@ -158,12 +143,12 @@ class MuqtadiRepositoryImp(
                             trySend(Resource.Success(annoucements))
 
                         }
-            }.addOnFailureListener {
-                trySend(Resource.Error(it.localizedMessage ?: "Failed to fetch masjid"))
-                close()
-            }
-        awaitClose { listener?.remove() }
-    }
+                }.addOnFailureListener {
+                    trySend(Resource.Error(it.localizedMessage ?: "Failed to fetch masjid"))
+                    close()
+                }
+            awaitClose { listener?.remove() }
+        }
 
 
     override suspend fun logout(): Resource<Masjid> {

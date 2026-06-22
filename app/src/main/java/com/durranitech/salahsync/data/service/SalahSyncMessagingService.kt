@@ -36,6 +36,7 @@ class SalahSyncMessagingService : FirebaseMessagingService(){
                 else -> NotificationChannels.GENERAL
             }
 
+        // Pass metadata to MainActivity to handle deep linking/navigation on click
         val intent = Intent(this, MainActivity::class.java).apply {
             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("notification_type", type)

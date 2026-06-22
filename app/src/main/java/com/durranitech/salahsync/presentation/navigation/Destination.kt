@@ -27,7 +27,8 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object MuqtadiDashboardScreen : Destination
- @Serializable
+
+    @Serializable
     data object MasjidScreen : Destination
 
     @Serializable
@@ -42,4 +43,11 @@ sealed interface Destination : NavKey {
     @Serializable
     data object JoinMasjidListScreen : Destination
 
+    @Serializable
+    data object MasjidDetailScreenForMuqtadi : Destination
+
+    @Serializable
+    data class QrScreen(val masjidCode: String, val masjidName: String) : Destination
+    @Serializable
+    object ScanQrScreen : Destination
 }

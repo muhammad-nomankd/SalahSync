@@ -84,7 +84,6 @@ import com.durranitech.salahsync.domain.model.UserRole
 import com.durranitech.salahsync.presentation.authentication.AuthIntent
 import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
 
-// ─── Tokens (shared with SignInScreen) ────────────────────────────────────────
 private val GreenDeep       = Color(0xFF065F46)
 private val GreenPrimary    = Color(0xFF1B8C5E)
 private val GreenLight      = Color(0xFF26A874)
@@ -132,22 +131,22 @@ fun SignUpScreen(
 
     val headerAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(500), label = "h"
+        animationSpec = tween(500), label = "h_alpha"
     )
     val formAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(500, delayMillis = 150), label = "f"
+        animationSpec = tween(500, delayMillis = 150), label = "f_alpha"
     )
     val formOffset by animateFloatAsState(
         targetValue = if (visible) 0f else 24f,
-        animationSpec = tween(500, delayMillis = 150, easing = EaseOutCubic), label = "fo"
+        animationSpec = tween(500, delayMillis = 150, easing = EaseOutCubic), label = "f_offset"
     )
 
     val infiniteTransition = rememberInfiniteTransition(label = "glow")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f, targetValue = 0.45f,
         animationSpec = infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "ga"
+        label = "glow_alpha"
     )
 
     LaunchedEffect(state.isUserAuthenticated, state.role) {
@@ -183,7 +182,6 @@ fun SignUpScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Ambient glow blobs
         Box(
             modifier = Modifier.size(260.dp).align(Alignment.TopStart)
                 .blur(70.dp).background(glow.copy(alpha = glowAlpha * 0.25f), CircleShape)
@@ -203,7 +201,6 @@ fun SignUpScreen(
         ) {
             Spacer(Modifier.height(20.dp))
 
-            // ── Header ────────────────────────────────────────────────────
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.alpha(headerAlpha)
@@ -227,7 +224,6 @@ fun SignUpScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                // Role icon with glow
                 Box(contentAlignment = Alignment.Center) {
                     Box(Modifier.size(96.dp).background(primary.copy(alpha = glowAlpha * 0.15f), CircleShape))
                     Box(Modifier.size(72.dp).background(primary.copy(alpha = 0.1f), CircleShape))
@@ -241,7 +237,6 @@ fun SignUpScreen(
 
                 Spacer(Modifier.height(14.dp))
 
-                // Role pill
                 Row(
                     modifier = Modifier
                         .background(surface, RoundedCornerShape(20.dp))
@@ -264,7 +259,6 @@ fun SignUpScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Form card ─────────────────────────────────────────────────
             Column(
                 modifier = Modifier
                     .alpha(formAlpha)
@@ -273,7 +267,6 @@ fun SignUpScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Error banner
                 val errorMsg = localError ?: state.error
                 AnimatedVisibility(
                     visible = errorMsg != null,
@@ -295,7 +288,6 @@ fun SignUpScreen(
                     }
                 }
 
-                // Success banner
                 AnimatedVisibility(
                     visible = state.message != null,
                     enter   = fadeIn(tween(200)) + slideInVertically(tween(200)) { -it }
@@ -315,7 +307,6 @@ fun SignUpScreen(
                     }
                 }
 
-                // Fields
                 SignUpTextField(
                     value = fullName, onValueChange = { fullName = it; localError = null },
                     label = "Full name", placeholder = "e.g. Abdullah Khan",
@@ -353,13 +344,11 @@ fun SignUpScreen(
                     isPassword = true, showPassword = showConfirm,
                     onTogglePassword = { showConfirm = !showConfirm },
                     isError = localError?.contains("match") == true,
-                    // Show green check when passwords match and both non-empty
                     isValid = confirmPassword.isNotEmpty() && password == confirmPassword,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { submit() })
                 )
 
-                // Submit
                 Button(
                     onClick = ::submit,
                     enabled = !loading,
@@ -380,7 +369,6 @@ fun SignUpScreen(
                     }
                 }
 
-                // Divider + sign in link
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -422,8 +410,6 @@ fun SignUpScreen(
         }
     }
 }
-
-// ─── Field composable ─────────────────────────────────────────────────────────
 
 @Composable
 private fun SignUpTextField(

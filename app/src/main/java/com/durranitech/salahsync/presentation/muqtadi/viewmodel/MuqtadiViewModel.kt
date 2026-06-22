@@ -326,6 +326,20 @@ class MuqtadiViewModel @Inject constructor(
         val currentUser = firebaseAuth.currentUser ?: run { onError("User not logged in"); return }
         viewModelScope.launch {
             try {
+                // 1. Fetch the user's name from the "users" collection first
+                val userDoc = firestore
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .get()
+                    .await()
+
+                val name = userDoc.getString("name")        // adjust field key to match your schema
+                    ?: userDoc.getString("displayName")
+                    ?: userDoc.getString("username")
+                    ?: currentUser.displayName              // fallback to Auth profile
+                    ?: "Unknown"
+
+                // 2. Now write to the members sub-collection with the resolved name
                 firestore
                     .collection("masjid")
                     .document(masjid.id)
@@ -334,7 +348,7 @@ class MuqtadiViewModel @Inject constructor(
                     .set(mapOf(
                         "id"          to currentUser.uid,
                         "email"       to (currentUser.email ?: ""),
-                        "name"        to (currentUser.displayName ?: ""),
+                        "name"        to name,
                         "joinedDate"  to System.currentTimeMillis(),
                         "address"     to "",
                         "phoneNumber" to ""
@@ -369,5 +383,50 @@ class MuqtadiViewModel @Inject constructor(
         super.onCleared()
         cleanup()
     }
+
+    fun joinMasjidByCode(
+        code: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val snapshot = firestore
+                    .collection("masjid")          // ✅ matches the rest of your code
+                    .whereEqualTo("code", code)
+                    .get()
+                    .await()
+
+                val doc = snapshot.documents.firstOrNull()
+                val masjid = doc
+                    ?.toObject(Masjid::class.java)
+                    ?.copy(id = doc.id)            // ✅ also copy the document ID or joinMasjid
+                //    will write to the wrong sub-collection
+
+                if (masjid == null) {
+                    _isLoading.value = false
+                    onError("No masjid found with this code. Please try again.")
+                    return@launch
+                }
+
+                joinMasjid(
+                    masjid = masjid,
+                    onSuccess = {
+                        _isLoading.value = false
+                        onSuccess()
+                    },
+                    onError = { msg ->
+                        _isLoading.value = false
+                        onError(msg)
+                    }
+                )
+            } catch (e: Exception) {
+                _isLoading.value = false
+                onError("Failed to scan: ${e.message}")
+            }
+        }
+    }
+
 
 }

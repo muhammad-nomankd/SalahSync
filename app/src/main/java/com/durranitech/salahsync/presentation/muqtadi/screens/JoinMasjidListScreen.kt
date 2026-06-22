@@ -65,7 +65,6 @@ import com.durranitech.salahsync.domain.model.Masjid
 import com.durranitech.salahsync.presentation.muqtadi.viewmodel.MuqtadiViewModel
 import com.durranitech.salahsync.ui.theme.SalahSyncTheme
 
-// ─── Colors (same palette as Muqtadi dashboard) ───────────────────────────────
 private val BluePrimary = Color(0xFF1E40AF)
 private val BlueLight = Color(0xFF3B82F6)
 private val BlueSurface = Color(0xFFEFF6FF)

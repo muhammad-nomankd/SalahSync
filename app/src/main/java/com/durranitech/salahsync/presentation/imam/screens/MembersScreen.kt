@@ -32,8 +32,10 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -41,8 +43,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,15 +61,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.durranitech.salahsync.domain.model.Member
 import com.durranitech.salahsync.presentation.imam.components.AddMemberScreen
@@ -77,16 +77,31 @@ import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 import formatDate
 import java.util.UUID
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
-private val GreenPrimary = Color(0xFF1B8C5E)
-private val GreenLight   = Color(0xFF26A874)
-private val GreenSurface = Color(0xFFE8F5EF)
-private val DeleteRed    = Color(0xFFE53935)
+// ─── Color Palette ────────────────────────────────────────────────────────────
 
-// Avatar accent palette — cycles per member index
-private val avatarColors = listOf(
-    Color(0xFF1B8C5E), Color(0xFF5C6BC0), Color(0xFFFFA726),
-    Color(0xFFE57373), Color(0xFF7E57C2), Color(0xFF26A874)
+private val GreenPrimary = Color(0xFF1B8C5E)
+private val GreenSurface = Color(0xFFE8F5EF)
+private val DeleteRed = Color(0xFFE53935)
+private val DeleteSurface = Color(0xFFFFEBEE)
+
+// Cycles per member card — same palette as AnnouncementsScreen for consistency
+private val accentPalette = listOf(
+    Color(0xFF1B8C5E),
+    Color(0xFF5C6BC0),
+    Color(0xFFFFA726),
+    Color(0xFFE57373),
+    Color(0xFF7E57C2),
+    Color(0xFF00897B)
+)
+
+// Matching surface colors for top bars & badges
+private val accentSurfaces = listOf(
+    Color(0xFFE8F5EF),
+    Color(0xFFEDE7F6),
+    Color(0xFFFFF3E0),
+    Color(0xFFFFEBEE),
+    Color(0xFFEDE7F6),
+    Color(0xFFE0F2F1)
 )
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -96,13 +111,12 @@ private val avatarColors = listOf(
 fun MembersScreen(
     viewModel: ImamViewModel = hiltViewModel()
 ) {
-    val state   by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    var showAddMember  by remember { mutableStateOf(false) }
+    var showAddMember by remember { mutableStateOf(false) }
     var memberToDelete by remember { mutableStateOf<Member?>(null) }
 
-    // ✅ Fixed: was listening to errorMessage key but showing successMessage
     LaunchedEffect(state.successMessage) {
         state.successMessage?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
     }
@@ -110,16 +124,14 @@ fun MembersScreen(
         state.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
     }
 
-    // Delete dialog — outside Scaffold so it's not affected by padding
     memberToDelete?.let { member ->
         DeleteMemberDialog(
-            memberName    = member.name,
-            onConfirm     = { viewModel.deleteMember(member.id); memberToDelete = null },
-            onDismiss     = { memberToDelete = null }
+            memberName = member.name,
+            onConfirm = { viewModel.deleteMember(member.id); memberToDelete = null },
+            onDismiss = { memberToDelete = null }
         )
     }
 
-    // ── Screen transition: list ↔ add form ───────────────────────────────────
     AnimatedContent(
         targetState = showAddMember,
         transitionSpec = {
@@ -137,15 +149,15 @@ fun MembersScreen(
         if (adding) {
             AddMemberScreen(
                 onNavigateBack = { showAddMember = false },
-                onAddMember    = { name, email, phone, address ->
+                onAddMember = { name, email, phone, address ->
                     viewModel.addMember(
                         Member(
-                            id          = UUID.randomUUID().toString(),
-                            name        = name.trim(),
-                            email       = email.trim(),
+                            id = UUID.randomUUID().toString(),
+                            name = name.trim(),
+                            email = email.trim(),
                             phoneNumber = phone.trim(),
-                            address     = address.trim(),
-                            joinedDate  = System.currentTimeMillis()
+                            address = address.trim(),
+                            joinedDate = System.currentTimeMillis()
                         )
                     )
                     showAddMember = false
@@ -154,53 +166,77 @@ fun MembersScreen(
         } else {
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Column {
-                                Text(
-                                    text = "Members",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "${state.members.size} registered member${if (state.members.size != 1) "s" else ""}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        TopAppBar(
+                            title = {
+                                Column {
+                                    Text(
+                                        text = "Community",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${state.members.size} registered member${if (state.members.size != 1) "s" else ""}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                }
+                            },
+                            actions = {
+                                IconButton(onClick = { /* TODO: search */ }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Search,
+                                        contentDescription = "Search members",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                                IconButton(onClick = { /* TODO: menu */ }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.MoreVert,
+                                        contentDescription = "More options",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
-                    )
+                    }
                 },
                 floatingActionButton = {
-                    FloatingActionButton(
+                    androidx.compose.material3.FloatingActionButton(
                         onClick = { showAddMember = true },
                         containerColor = GreenPrimary,
                         contentColor = Color.White,
-                        elevation = FloatingActionButtonDefaults.elevation(4.dp),
+                        elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(
+                            0.dp
+                        ),
                         shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .size(52.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Text(text = "Add", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        }
+                        Icon(
+                            Icons.Outlined.Add,
+                            contentDescription = "Add member",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.background
             ) { innerPadding ->
 
-                // ✅ isLoading checked first — don't flash empty state while loading
                 when {
                     state.isLoading -> {
                         Box(
-                            modifier = Modifier.fillMaxSize().padding(innerPadding),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -223,14 +259,44 @@ fun MembersScreen(
 
                     else -> {
                         MembersList(
-                            members  = state.members,
-                            padding  = innerPadding,
+                            members = state.members,
+                            padding = innerPadding,
                             onDelete = { memberToDelete = it }
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StatPill(
+    label: String,
+    value: String,
+    color: Color,
+    bg: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(bg)
+            .padding(vertical = 10.dp, horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = value,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = color.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -254,17 +320,17 @@ private fun MembersList(
     ) {
         itemsIndexed(
             items = members,
-            key   = { _, m -> m.id }
+            key = { _, m -> m.id }
         ) { index, member ->
             AnimatedVisibility(
                 visible = true,
-                enter   = fadeIn(tween(300, delayMillis = index * 50)) +
+                enter = fadeIn(tween(300, delayMillis = index * 50)) +
                         slideInVertically(tween(300, delayMillis = index * 50)) { it / 3 }
             ) {
                 MemberCard(
-                    member      = member,
-                    colorIndex  = index,
-                    onDelete    = onDelete
+                    member = member,
+                    colorIndex = index,
+                    onDelete = onDelete
                 )
             }
         }
@@ -279,48 +345,49 @@ private fun MemberCard(
     colorIndex: Int,
     onDelete: (Member) -> Unit
 ) {
-    val accentColor = avatarColors[colorIndex % avatarColors.size]
+    val accent = accentPalette[colorIndex % accentPalette.size]
+    val surface = accentSurfaces[colorIndex % accentSurfaces.size]
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(16.dp),
-        colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            // Left accent bar
+        Column(modifier = Modifier.fillMaxWidth()) {
+
+            // ── Thin colored top bar (matches AnnouncementsScreen pattern) ──
             Box(
                 modifier = Modifier
-                    .width(4.dp)
-                    .height(1000.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(accentColor, accentColor.copy(alpha = 0.3f))
-                        )
-                    )
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(accent)
             )
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(16.dp),
+                modifier = Modifier.padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // ── Header: avatar + name + delete ───────────────────────────
+
+                // ── Header: avatar + name + joined + delete ──────────────────
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Avatar
+                    // Avatar circle
                     Box(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(CircleShape)
-                            .background(accentColor),
+                            .background(accent),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text  = member.name.firstOrNull()?.uppercase() ?: "?",
+                            text = member.name.trim()
+                                .firstOrNull()
+                                ?.uppercase() ?: "",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -331,36 +398,41 @@ private fun MemberCard(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text  = member.name,
-                            style = MaterialTheme.typography.titleMedium,
+                            text = member.name,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(Modifier.height(3.dp))
+                        // Joined date pill
                         Box(
                             modifier = Modifier
-                                .background(accentColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(surface)
+                                .padding(horizontal = 7.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text  = "Joined ${formatDate(member.joinedDate)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = accentColor,
-                                fontWeight = FontWeight.Medium
+                                text = "Joined ${formatDate(member.joinedDate)}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = accent,
+                                letterSpacing = 0.3.sp
                             )
                         }
                     }
 
-                    // Delete — subtle, low-opacity
+                    // Delete button — subtle
                     IconButton(
-                        onClick   = { onDelete(member) },
-                        modifier  = Modifier.size(36.dp)
+                        onClick = { onDelete(member) },
+                        modifier = Modifier.size(30.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Remove member",
-                            tint     = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                            modifier = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -368,30 +440,26 @@ private fun MemberCard(
                 // ── Divider ──────────────────────────────────────────────────
                 HorizontalDivider(
                     thickness = 0.5.dp,
-                    color     = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                 )
 
-                // ── Contact details ──────────────────────────────────────────
+                // ── Contact rows ─────────────────────────────────────────────
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (member.email.isNotBlank()) {
-                        MemberDetailRow(
-                            icon  = Icons.Outlined.Email,
-                            tint  = accentColor,
-                            text  = member.email
-                        )
+                        ContactRow(icon = Icons.Outlined.Email, tint = accent, text = member.email)
                     }
                     if (member.phoneNumber.isNotBlank()) {
-                        MemberDetailRow(
-                            icon  = Icons.Outlined.Phone,
-                            tint  = accentColor,
-                            text  = member.phoneNumber
+                        ContactRow(
+                            icon = Icons.Outlined.Phone,
+                            tint = accent,
+                            text = member.phoneNumber
                         )
                     }
                     if (member.address.isNotBlank()) {
-                        MemberDetailRow(
-                            icon  = Icons.Outlined.LocationOn,
-                            tint  = accentColor,
-                            text  = member.address
+                        ContactRow(
+                            icon = Icons.Outlined.LocationOn,
+                            tint = accent,
+                            text = member.address
                         )
                     }
                 }
@@ -400,8 +468,10 @@ private fun MemberCard(
     }
 }
 
+// ─── Contact Row ─────────────────────────────────────────────────────────────
+
 @Composable
-private fun MemberDetailRow(
+private fun ContactRow(
     icon: ImageVector,
     tint: Color,
     text: String
@@ -413,13 +483,13 @@ private fun MemberDetailRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint     = tint.copy(alpha = 0.7f),
+            tint = tint.copy(alpha = 0.7f),
             modifier = Modifier.size(14.dp)
         )
         Text(
-            text     = text,
-            style    = MaterialTheme.typography.bodySmall,
-            color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -434,30 +504,31 @@ private fun EmptyMembersState(padding: PaddingValues) {
     LaunchedEffect(Unit) { visible = true }
 
     Box(
-        modifier = Modifier.fillMaxSize().padding(padding),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp),
             modifier = Modifier.padding(32.dp)
         ) {
             AnimatedVisibility(
                 visible = visible,
-                enter   = scaleIn(tween(500)) + fadeIn(tween(500))
+                enter = scaleIn(tween(500)) + fadeIn(tween(500))
             ) {
                 Box(
                     modifier = Modifier
-                        .size(110.dp)
-                        .clip(CircleShape)
+                        .size(100.dp)
+                        .clip(RoundedCornerShape(28.dp))
                         .background(GreenSurface),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.People,
                         contentDescription = null,
-                        tint     = GreenPrimary,
-                        modifier = Modifier.size(48.dp)
+                        tint = GreenPrimary,
+                        modifier = Modifier.size(44.dp)
                     )
                 }
             }
@@ -466,21 +537,21 @@ private fun EmptyMembersState(padding: PaddingValues) {
 
             AnimatedVisibility(
                 visible = visible,
-                enter   = fadeIn(tween(400, delayMillis = 150))
+                enter = fadeIn(tween(400, delayMillis = 150))
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text  = "No members yet",
+                        text = "No members yet",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text  = "Add your first community member\nusing the button below.",
+                        text = "Add your first community member\nusing the button below.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        textAlign = TextAlign.Center,
                         lineHeight = 22.sp
                     )
                 }
@@ -503,27 +574,27 @@ private fun DeleteMemberDialog(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .background(DeleteRed.copy(alpha = 0.1f), CircleShape),
+                    .background(DeleteSurface, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = null,
-                    tint     = DeleteRed,
+                    tint = DeleteRed,
                     modifier = Modifier.size(24.dp)
                 )
             }
         },
         title = {
             Text(
-                text  = "Remove Member",
+                text = "Remove Member",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
         },
         text = {
             Text(
-                text  = "$memberName will be permanently removed from the masjid community. This cannot be undone.",
+                text = "$memberName will be permanently removed from the masjid community. This cannot be undone.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
@@ -531,8 +602,8 @@ private fun DeleteMemberDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors  = ButtonDefaults.buttonColors(containerColor = DeleteRed),
-                shape   = RoundedCornerShape(10.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = DeleteRed),
+                shape = RoundedCornerShape(10.dp)
             ) {
                 Text("Remove", fontWeight = FontWeight.SemiBold)
             }

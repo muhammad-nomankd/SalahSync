@@ -1,4 +1,4 @@
-package com.durranitech.salahsync.presentation.authentication.screens.com.durranitech.salahsync.presentation.authentication
+package com.durranitech.salahsync.presentation.authentication
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseOutCubic
@@ -81,10 +81,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.durranitech.salahsync.R
 import com.durranitech.salahsync.domain.model.UserRole
-import com.durranitech.salahsync.presentation.authentication.AuthIntent
 import com.durranitech.salahsync.presentation.authentication.viewModel.AuthViewModel
 
-// ─── Design tokens ─────────────────────────────────────────────────────────────
 private val GreenDeep    = Color(0xFF065F46)
 private val GreenPrimary = Color(0xFF1B8C5E)
 private val GreenLight   = Color(0xFF26A874)
@@ -104,39 +102,37 @@ fun SignInScreen(
     onSwitchToMuqtadiDashboard: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    val state    by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val isLoading = state.isLoading
 
-    var email         by remember { mutableStateOf("") }
-    var password      by remember { mutableStateOf("") }
-    var showPassword  by remember { mutableStateOf(false) }
-    var localError    by remember { mutableStateOf<String?>(null) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var localError by remember { mutableStateOf<String?>(null) }
 
-    val focusManager    = LocalFocusManager.current
-    val passwordFocus   = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val passwordFocus = remember { FocusRequester() }
 
-    // Role-specific branding
-    val primary    = if (role == UserRole.IMAM) GreenPrimary  else IndigoPrimary
-    val light      = if (role == UserRole.IMAM) GreenLight    else IndigoLight
-    val surface    = if (role == UserRole.IMAM) GreenSurface  else IndigoSurface
-    val glow       = if (role == UserRole.IMAM) GreenGlow     else IndigoLight
-    val roleLabel  = if (role == UserRole.IMAM) "Imam"        else "Muqtadi"
-    val roleIcon   = if (role == UserRole.IMAM) Icons.Outlined.Person else Icons.Outlined.Groups
-    val demoEmail  = if (role == UserRole.IMAM) "imam@mosque.demo" else "muqtadi@mosque.demo"
+    val primary = if (role == UserRole.IMAM) GreenPrimary else IndigoPrimary
+    val light = if (role == UserRole.IMAM) GreenLight else IndigoLight
+    val surface = if (role == UserRole.IMAM) GreenSurface else IndigoSurface
+    val glow = if (role == UserRole.IMAM) GreenGlow else IndigoLight
+    val roleLabel = if (role == UserRole.IMAM) "Imam" else "Muqtadi"
+    val roleIcon = if (role == UserRole.IMAM) Icons.Outlined.Person else Icons.Outlined.Groups
+    val demoEmail = if (role == UserRole.IMAM) "imam@mosque.demo" else "muqtadi@mosque.demo"
 
-    // Staggered entrance
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
     val headerAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
         animationSpec = tween(500),
-        label = "header"
+        label = "header_alpha"
     )
     val formAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
         animationSpec = tween(500, delayMillis = 150),
-        label = "form"
+        label = "form_alpha"
     )
     val formOffset by animateFloatAsState(
         targetValue = if (visible) 0f else 24f,
@@ -144,7 +140,6 @@ fun SignInScreen(
         label = "form_offset"
     )
 
-    // Glow pulse on icon
     val infiniteTransition = rememberInfiniteTransition(label = "glow")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f, targetValue = 0.5f,
@@ -176,7 +171,6 @@ fun SignInScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Background glow blobs
         Box(
             modifier = Modifier
                 .size(300.dp)
@@ -202,14 +196,12 @@ fun SignInScreen(
         ) {
             Spacer(Modifier.height(24.dp))
 
-            // ── Header ────────────────────────────────────────────────────
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.
-                alpha(headerAlpha)
+                modifier = Modifier
+                    .alpha(headerAlpha)
                     .fillMaxWidth()
             ) {
-                // Back button
                 TextButton(
                     onClick = onBack,
                     modifier = Modifier
@@ -232,7 +224,6 @@ fun SignInScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                // Icon with glow rings
                 Box(contentAlignment = Alignment.Center) {
                     Box(
                         modifier = Modifier
@@ -256,7 +247,6 @@ fun SignInScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // App wordmark (small)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -283,7 +273,6 @@ fun SignInScreen(
 
             Spacer(Modifier.height(28.dp))
 
-            // ── Form card ─────────────────────────────────────────────────
             Column(
                 modifier = Modifier
                     .alpha(formAlpha)
@@ -292,7 +281,6 @@ fun SignInScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Error banner
                 val errorMsg = localError ?: state.error
                 AnimatedVisibility(
                     visible = errorMsg != null,
@@ -320,7 +308,6 @@ fun SignInScreen(
                     }
                 }
 
-                // Email
                 SignInTextField(
                     value = email, onValueChange = { email = it; localError = null },
                     label = "Email address", placeholder = "you@gmail.com",
@@ -329,7 +316,6 @@ fun SignInScreen(
                     keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() })
                 )
 
-                // Password
                 SignInTextField(
                     value = password, onValueChange = { password = it; localError = null },
                     label = "Password", placeholder = "Your password",
@@ -341,7 +327,6 @@ fun SignInScreen(
                     keyboardActions = KeyboardActions(onDone = { submit() })
                 )
 
-                // Sign In button
                 Button(
                     onClick = ::submit,
                     enabled = !isLoading,
@@ -362,7 +347,6 @@ fun SignInScreen(
                     }
                 }
 
-                // Divider
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -375,7 +359,6 @@ fun SignInScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
 
-                // Demo tile
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -411,7 +394,6 @@ fun SignInScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Sign Up link
             TextButton(onClick = { onSwitchToSignUp(role) }) {
                 Text(
                     buildAnnotatedString {
@@ -436,8 +418,6 @@ fun SignInScreen(
         }
     }
 }
-
-// ─── Reusable text field ──────────────────────────────────────────────────────
 
 @Composable
 private fun SignInTextField(

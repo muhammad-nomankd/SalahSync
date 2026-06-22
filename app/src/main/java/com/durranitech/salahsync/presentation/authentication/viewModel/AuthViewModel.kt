@@ -91,15 +91,12 @@ class AuthViewModel @Inject constructor(
                             masjidId = result.data.masjid?.id, userId = result.data.id
                         )
 
-                        // Fetch user role after successful sign-in
                         user.let {
-                            // If user already has role (from Firestore fetch), use it
                             if (it.role != null) {
                                 _state.value = _state.value.copy(
                                     role = it.role, isUserAuthenticated = true
                                 )
                             } else {
-                                // Otherwise fetch role separately
                                 getUserRole(it.id)
                             }
                         }
@@ -153,17 +150,16 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // In AuthViewModel - add this function
     fun refreshUser() {
         viewModelScope.launch {
             getUserDetailsUseCase().collect { result ->
                 when (result) {
-                    is Resource.Loading -> { /* don't touch isLoading, silent refresh */ }
+                    is Resource.Loading -> { }
                     is Resource.Success -> _state.value = _state.value.copy(
                         user = result.data,
                         error = null
                     )
-                    is Resource.Error -> { /* silent fail, user already on dashboard */ }
+                    is Resource.Error -> { }
                 }
             }
         }

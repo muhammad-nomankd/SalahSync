@@ -36,7 +36,8 @@ class AuthRepositoryImp(
                         id = firebaseUser?.uid ?: "",
                         name = name,
                         email = firebaseUser?.email ?: "",
-                        role = role
+                        role = role,
+
                     )
                     firebaseFirestore.collection("users").document(firebaseUser?.uid ?: "")
                         .set(user).addOnSuccessListener {

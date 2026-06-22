@@ -42,12 +42,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.distinctUntilChanged
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
 private val GreenPrimary = Color(0xFF1B8C5E)
 private val GreenSurface = Color(0xFFE8F5EF)
 
-// ─── Nav items definition ─────────────────────────────────────────────────────
 private data class NavItem(
     val title: String,
     val selectedIcon: ImageVector,
@@ -57,13 +56,11 @@ private data class NavItem(
 )
 
 private val navItems = listOf(
-    NavItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
-    NavItem("Announcements", Icons.Filled.Campaign, Icons.Outlined.Campaign, hasDot = true),
-    NavItem("Masjid", Icons.Filled.Mosque, Icons.Outlined.Mosque),
-    NavItem("Members", Icons.Filled.Group, Icons.Outlined.Group, hasDot = true)
+    NavItem("Home",          Icons.Filled.Home,      Icons.Outlined.Home),
+    NavItem("Announcements", Icons.Filled.Campaign,  Icons.Outlined.Campaign, hasDot = true),
+    NavItem("Masjid",        Icons.Filled.Mosque,    Icons.Outlined.Mosque),
+    NavItem("Members",       Icons.Filled.Group,     Icons.Outlined.Group, hasDot = true)
 )
-
-// ─── Dashboard ────────────────────────────────────────────────────────────────
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -77,27 +74,26 @@ fun ImamMainDashboard(
     paddingValue: PaddingValues = PaddingValues(),
     onCreateMasjid: () -> Unit = {},
     onCreateNewAnnouncement: () -> Unit = {},
-    onNavigateToUpdateSalahTimes: () -> Unit = {}
+    onNavigateToUpdateSalahTimes: () -> Unit = {},
+    // ── FIX: add this parameter so MainRoute can wire navigation into the pager ──
+    onShowQrCode: () -> Unit = {}
 ) {
+    val pagerState = rememberPagerState(pageCount = { navItems.size })
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
-    // ── Pager state — single source of truth ─────────────────────────────────
-    val pagerState = rememberPagerState(
-        initialPage = selectedIndex,
-        pageCount = { navItems.size }
-    )
-
-    // Keep bottom nav in sync when pager swipes
+    // Pager swipe → update bottom nav only when page fully settles
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
-            selectedIndex = page
-        }
+        snapshotFlow { pagerState.settledPage }
+            .distinctUntilChanged()
+            .collect { settledPage ->
+                selectedIndex = settledPage
+            }
     }
 
-    // Keep pager in sync when bottom nav tapped
+    // Bottom nav tap → instant jump (no animation, no feedback loop)
     LaunchedEffect(selectedIndex) {
         if (pagerState.currentPage != selectedIndex) {
-            pagerState.animateScrollToPage(selectedIndex)
+            pagerState.scrollToPage(selectedIndex)
         }
     }
 
@@ -105,11 +101,9 @@ fun ImamMainDashboard(
         bottomBar = {
             ImamBottomBar(
                 selectedIndex = selectedIndex,
-                onItemSelected = { selectedIndex = it }
+                onItemSelected = { index -> selectedIndex = index }
             )
         },
-        // ✅ Key fix: consume navigationBar insets at Scaffold level so content
-        // (and FABs inside child screens) are never hidden behind the bottom bar.
         contentWindowInsets = WindowInsets(0),
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -118,11 +112,9 @@ fun ImamMainDashboard(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),  // ✅ FABs inside children use this, not raw screen edges
-            // Disable user swipe on Masjid & Members pages that have their own
-            // full-screen sub-screens (create/add flows) to avoid accidental swipes
+                .padding(innerPadding),
             userScrollEnabled = true,
-            beyondViewportPageCount = 1  // Pre-compose adjacent pages for instant feel
+            beyondViewportPageCount = 1
         ) { page ->
             when (page) {
                 0 -> ImamHomeScreen(
@@ -130,20 +122,17 @@ fun ImamMainDashboard(
                     onNavigateToUpdateSalahTimes = onNavigateToUpdateSalahTimes,
                     onCreateNewAnnouncement = onCreateNewAnnouncement
                 )
-
                 1 -> AnnouncementsScreen()
                 2 -> MasjidScreen(
                     onCreateMasjid = onCreateMasjid,
-                    onLogOut = onLogOut
+                    onLogOut = onLogOut,
+                    onShowQrCode = onShowQrCode
                 )
-
                 3 -> MembersScreen()
             }
         }
     }
 }
-
-// ─── Bottom Navigation Bar ────────────────────────────────────────────────────
 
 @Composable
 private fun ImamBottomBar(
@@ -152,13 +141,12 @@ private fun ImamBottomBar(
 ) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,   // Flat — elevation creates ugly tonal overlay on light theme
+        tonalElevation = 0.dp,
         windowInsets = WindowInsets.navigationBars
     ) {
         navItems.forEachIndexed { index, item ->
             val isSelected = selectedIndex == index
 
-            // Subtle scale pop on selection
             val iconScale by animateFloatAsState(
                 targetValue = if (isSelected) 1.15f else 1f,
                 animationSpec = spring(
@@ -172,19 +160,12 @@ private fun ImamBottomBar(
                 selected = isSelected,
                 onClick = { onItemSelected(index) },
                 icon = {
-                    BadgedBox(
-                        badge = {
-                            when {
-                                item.badgeCount != null -> Badge {
-                                    Text(item.badgeCount.toString())
-                                }
-
-                                item.hasDot -> Badge(
-                                    containerColor = GreenPrimary
-                                )
-                            }
+                    BadgedBox(badge = {
+                        when {
+                            item.badgeCount != null -> Badge { Text(item.badgeCount.toString()) }
+                            item.hasDot -> Badge(containerColor = GreenPrimary)
                         }
-                    ) {
+                    }) {
                         Icon(
                             imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                             contentDescription = item.title,
@@ -194,12 +175,7 @@ private fun ImamBottomBar(
                         )
                     }
                 },
-                label = {
-                    Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                },
+                label = { Text(item.title, style = MaterialTheme.typography.labelSmall) },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = GreenPrimary,

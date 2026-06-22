@@ -233,20 +233,7 @@ fun CreateAnnouncementScreen(
 
                     Spacer(Modifier.height(16.dp))
 
-                    // ── Message field ────────────────────────────────────────
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SectionLabel("Message")
-                        Text(
-                            text = "${message.length} chars",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                            fontSize = 11.sp
-                        )
-                    }
+                    SectionLabel("Message")
                     Spacer(Modifier.height(6.dp))
 
                     OutlinedTextField(

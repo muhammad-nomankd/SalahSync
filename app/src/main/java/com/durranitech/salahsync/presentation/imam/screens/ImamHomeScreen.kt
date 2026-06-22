@@ -1,10 +1,5 @@
 package com.durranitech.salahsync.presentation.imam.screens
 
-import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,20 +21,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,23 +44,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.presentation.imam.ImamEvent
 import com.durranitech.salahsync.presentation.imam.UiState
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
 import com.durranitech.salahsync.ui.getTimeInMillis
+import com.durranitech.salahsync.ui.theme.SalahSyncTheme
 import com.durranitech.salahsync.util.formatTime
-import java.util.Calendar
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
-private val PrimaryGreen      = Color(0xFF1B8C5E)
+private val PrimaryGreen = Color(0xFF1B8C5E)
 private val PrimaryGreenLight = Color(0xFF26A874)
-private val SurfaceCard       = Color(0xFFF8FAF9)
-private val ActivePrayer      = Color(0xFFE8F5EF)
-private val ActivePrayerText  = Color(0xFF1B8C5E)
+private val ActivePrayer = Color(0xFFE8F5EF)
+private val ActivePrayerText = Color(0xFF1B8C5E)
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -80,37 +71,49 @@ fun ImamHomeScreen(
     paddingValues: PaddingValues,
     onNavigateToUpdateSalahTimes: () -> Unit = {},
     onCreateNewAnnouncement: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToAnnouncement: () -> Unit = {},
-    viewModel: ImamViewModel = hiltViewModel()  // ✅ Only called here, not in children
+    viewModel: ImamViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        Log.d("ImamHomeScreen", "fajrHour = ${uiState.salahTime?.fajrHour}")
         viewModel.onImamEvent(ImamEvent.ClearMessages)
         viewModel.fetchMasjidDetails()
     }
 
+    ImamHomeScreenContent(
+        uiState = uiState,
+        onNavigateToUpdateSalahTimes = onNavigateToUpdateSalahTimes,
+        onCreateNewAnnouncement = onCreateNewAnnouncement,
+        paddingValues = paddingValues
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ImamHomeScreenContent(
+    uiState: UiState,
+    onNavigateToUpdateSalahTimes: () -> Unit = {},
+    onCreateNewAnnouncement: () -> Unit = {},
+    paddingValues: PaddingValues = PaddingValues(0.dp)
+) {
     // Animate content on first load
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible = true }
+    val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
+    var visible by remember { mutableStateOf(isPreview) }
+    LaunchedEffect(Unit) {
+        if (!isPreview) visible = true
+    }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.padding(paddingValues)
     ) { innerPadding ->
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn(tween(400)) + slideInVertically(tween(400)) { it / 12 }
-        ) {
-            HomeContent(
-                uiState = uiState,
-                onEditTimes = onNavigateToUpdateSalahTimes,
-                onCreateNewAnnouncement = onCreateNewAnnouncement,
-                onNavigateToSalahTimes = onNavigateToUpdateSalahTimes,
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
+        HomeContent(
+            uiState = uiState,
+            onEditTimes = onNavigateToUpdateSalahTimes,
+            onCreateNewAnnouncement = onCreateNewAnnouncement,
+            onNavigateToSalahTimes = onNavigateToUpdateSalahTimes,
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 }
 
@@ -157,7 +160,7 @@ private fun NextPrayerCard(
     prayerName: String?,
     prayerTime: Long?,
     isLoading: Boolean,
-    hasSalahTimes: Boolean,  // ✅ Pass data, not ViewModel
+    hasSalahTimes: Boolean,
     onNavigateToSalahTimes: () -> Unit
 ) {
     Box(
@@ -193,6 +196,7 @@ private fun NextPrayerCard(
                     CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
                 }
             }
+
             !hasSalahTimes -> {
                 Column(
                     modifier = Modifier
@@ -217,6 +221,7 @@ private fun NextPrayerCard(
                     )
                 }
             }
+
             else -> {
                 Column(
                     modifier = Modifier
@@ -253,7 +258,10 @@ private fun NextPrayerCard(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .background(Color.White.copy(alpha = 0.18f), RoundedCornerShape(14.dp)),
+                                .background(
+                                    Color.White.copy(alpha = 0.18f),
+                                    RoundedCornerShape(14.dp)
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(text = "🌙", fontSize = 28.sp)
@@ -333,10 +341,19 @@ private fun QuickActionCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = icon, contentDescription = title, tint = iconTint, modifier = Modifier.size(20.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
             }
             Column {
-                Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.labelSmall,
@@ -366,33 +383,65 @@ private fun PrayerTimesSection(uiState: UiState) {
                 when {
                     uiState.isLoading -> {
                         Box(
-                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(color = PrimaryGreen, strokeWidth = 2.dp)
                         }
                     }
+
                     salahTime != null -> {
                         val prayers = listOf(
-                            Triple("Fajr",    "🌄", getTimeInMillis(salahTime.fajrHour    ?: 0, salahTime.fajrMinute    ?: 0)),
-                            Triple("Dhuhr",   "☀️", getTimeInMillis(salahTime.dhuhrHour   ?: 0, salahTime.dhuhrMinute   ?: 0)),
-                            Triple("Asr",     "🌤️", getTimeInMillis(salahTime.asrHour     ?: 0, salahTime.asrMinute     ?: 0)),
-                            Triple("Maghrib", "🌅", getTimeInMillis(salahTime.maghribHour ?: 0, salahTime.maghribMinute ?: 0)),
-                            Triple("Isha",    "🌙", getTimeInMillis(salahTime.ishaHour    ?: 0, salahTime.ishaMinute    ?: 0))
+                            Triple(
+                                "Fajr",
+                                "🌄",
+                                getTimeInMillis(salahTime.fajrHour ?: 0, salahTime.fajrMinute ?: 0)
+                            ),
+                            Triple(
+                                "Dhuhr",
+                                "☀️",
+                                getTimeInMillis(
+                                    salahTime.dhuhrHour ?: 0,
+                                    salahTime.dhuhrMinute ?: 0
+                                )
+                            ),
+                            Triple(
+                                "Asr",
+                                "🌤️",
+                                getTimeInMillis(salahTime.asrHour ?: 0, salahTime.asrMinute ?: 0)
+                            ),
+                            Triple(
+                                "Maghrib",
+                                "🌅",
+                                getTimeInMillis(
+                                    salahTime.maghribHour ?: 0,
+                                    salahTime.maghribMinute ?: 0
+                                )
+                            ),
+                            Triple(
+                                "Isha",
+                                "🌙",
+                                getTimeInMillis(salahTime.ishaHour ?: 0, salahTime.ishaMinute ?: 0)
+                            )
                         )
 
                         // Determine currently active prayer
                         val nowMillis = System.currentTimeMillis()
-                        val activePrayerIndex = prayers.indexOfLast { (_, _, millis) ->
-                            nowMillis >= millis
-                        }.coerceAtLeast(0)
+                        val nextPrayerIndex = prayers.indexOfFirst { (_, _, millis) ->
+                            millis > nowMillis
+                        }.let { index ->
+                            if (index == -1) 0 else index
+                        }
+
 
                         prayers.forEachIndexed { index, (name, icon, millis) ->
                             PrayerTimeRow(
                                 prayerName = name,
                                 time = formatTime(millis),
                                 icon = icon,
-                                isActive = index == activePrayerIndex
+                                isActive = index == nextPrayerIndex
                             )
                             if (index < prayers.size - 1) {
                                 HorizontalDivider(
@@ -403,10 +452,13 @@ private fun PrayerTimesSection(uiState: UiState) {
                             }
                         }
                     }
+
                     else -> {
                         Text(
                             text = "No prayer times available",
-                            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                            modifier = Modifier
+                                .padding(24.dp)
+                                .fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -496,5 +548,44 @@ private fun SectionTitle(title: String) {
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground
     )
+}
+
+// ─── Previews ────────────────────────────────────────────────────────────────
+
+@Preview(showBackground = true)
+@Composable
+private fun ImamHomeScreenPreview() {
+    val sampleSalahTime = SalahTime(
+        fajrHour = 5, fajrMinute = 30,
+        dhuhrHour = 12, dhuhrMinute = 30,
+        asrHour = 15, asrMinute = 45,
+        maghribHour = 18, maghribMinute = 15,
+        ishaHour = 20, ishaMinute = 0
+    )
+    val sampleUiState = UiState(
+        salahTime = sampleSalahTime,
+        nextPrayerName = "Asr",
+        nextPrayerTime = System.currentTimeMillis() + 3600000, // 1 hour from now
+        isLoading = false
+    )
+    SalahSyncTheme {
+        ImamHomeScreenContent(uiState = sampleUiState)
+    }
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun ImamHomeScreenLoadingPreview() {
+    SalahSyncTheme {
+        ImamHomeScreenContent(uiState = UiState(isLoading = true))
+    }
+}
+
+@Preview(showBackground = true, name = "Empty State")
+@Composable
+private fun ImamHomeScreenEmptyPreview() {
+    SalahSyncTheme {
+        ImamHomeScreenContent(uiState = UiState(salahTime = null))
+    }
 }
 

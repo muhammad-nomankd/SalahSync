@@ -56,7 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.durranitech.salahsync.domain.model.SalahTime
 import com.durranitech.salahsync.presentation.imam.viewmodel.ImamViewModel
@@ -66,12 +66,10 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
 private val GreenPrimary = Color(0xFF1B8C5E)
-private val GreenLight   = Color(0xFF26A874)
+private val GreenLight = Color(0xFF26A874)
 private val GreenSurface = Color(0xFFE8F5EF)
 
-// ─── Prayer metadata ──────────────────────────────────────────────────────────
 private data class PrayerMeta(
     val name: String,
     val emoji: String,
@@ -79,15 +77,13 @@ private data class PrayerMeta(
 )
 
 private val prayerMeta = listOf(
-    PrayerMeta("Fajr",    "🌄", Color(0xFF5C6BC0)),
-    PrayerMeta("Dhuhr",   "☀️",  GreenPrimary),
-    PrayerMeta("Asr",     "🌤️",  Color(0xFFFFA726)),
+    PrayerMeta("Fajr", "🌄", Color(0xFF5C6BC0)),
+    PrayerMeta("Dhuhr", "☀️", GreenPrimary),
+    PrayerMeta("Asr", "🌤️", Color(0xFFFFA726)),
     PrayerMeta("Maghrib", "🌅", Color(0xFFE57373)),
-    PrayerMeta("Isha",    "🌙", Color(0xFF7E57C2)),
-    PrayerMeta("Jummah",  "🕌", GreenLight)
+    PrayerMeta("Isha", "🌙", Color(0xFF7E57C2)),
+    PrayerMeta("Jummah", "🕌", GreenLight)
 )
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,43 +93,44 @@ fun AddUpdateSalahTimingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var fajrHour    by rememberSaveable { mutableIntStateOf(0) }
-    var fajrMinute  by rememberSaveable { mutableIntStateOf(0) }
-    var dhuhrHour   by rememberSaveable { mutableIntStateOf(0) }
+    var fajrHour by rememberSaveable { mutableIntStateOf(0) }
+    var fajrMinute by rememberSaveable { mutableIntStateOf(0) }
+    var dhuhrHour by rememberSaveable { mutableIntStateOf(0) }
     var dhuhrMinute by rememberSaveable { mutableIntStateOf(0) }
-    var asrHour     by rememberSaveable { mutableIntStateOf(0) }
-    var asrMinute   by rememberSaveable { mutableIntStateOf(0) }
-    var maghribHour   by rememberSaveable { mutableIntStateOf(0) }
+    var asrHour by rememberSaveable { mutableIntStateOf(0) }
+    var asrMinute by rememberSaveable { mutableIntStateOf(0) }
+    var maghribHour by rememberSaveable { mutableIntStateOf(0) }
     var maghribMinute by rememberSaveable { mutableIntStateOf(0) }
-    var ishaHour    by rememberSaveable { mutableIntStateOf(0) }
-    var ishaMinute  by rememberSaveable { mutableIntStateOf(0) }
-    var jummahHour    by rememberSaveable { mutableIntStateOf(0) }
-    var jummahMinute  by rememberSaveable { mutableIntStateOf(0) }
+    var ishaHour by rememberSaveable { mutableIntStateOf(0) }
+    var ishaMinute by rememberSaveable { mutableIntStateOf(0) }
+    var jummahHour by rememberSaveable { mutableIntStateOf(0) }
+    var jummahMinute by rememberSaveable { mutableIntStateOf(0) }
 
-    // ✅ One-time initialisation from saved Firestore data
     var hasInitialized by rememberSaveable { mutableStateOf(false) }
     if (!hasInitialized && state.salahTime != null && !state.isLoading) {
         val t = state.salahTime!!
-        fajrHour = t.fajrHour ?: 0;     fajrMinute  = t.fajrMinute ?: 0
-        dhuhrHour = t.dhuhrHour ?: 0;   dhuhrMinute = t.dhuhrMinute ?: 0
-        asrHour = t.asrHour ?: 0;       asrMinute   = t.asrMinute ?: 0
+        fajrHour = t.fajrHour ?: 0; fajrMinute = t.fajrMinute ?: 0
+        dhuhrHour = t.dhuhrHour ?: 0; dhuhrMinute = t.dhuhrMinute ?: 0
+        asrHour = t.asrHour ?: 0; asrMinute = t.asrMinute ?: 0
         maghribHour = t.maghribHour ?: 0; maghribMinute = t.maghribMinute ?: 0
-        ishaHour = t.ishaHour ?: 0;     ishaMinute  = t.ishaMinute ?: 0
+        ishaHour = t.ishaHour ?: 0; ishaMinute = t.ishaMinute ?: 0
         jummahHour = t.jummahHour ?: 0; jummahMinute = t.jummahMinute ?: 0
         hasInitialized = true
     }
 
-    // Entrance animation
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
 
     val prayers = listOf(
-        Triple(fajrHour,    fajrMinute,    { h: Int, m: Int -> fajrHour = h;    fajrMinute = m }),
-        Triple(dhuhrHour,   dhuhrMinute,   { h: Int, m: Int -> dhuhrHour = h;   dhuhrMinute = m }),
-        Triple(asrHour,     asrMinute,     { h: Int, m: Int -> asrHour = h;     asrMinute = m }),
-        Triple(maghribHour, maghribMinute, { h: Int, m: Int -> maghribHour = h; maghribMinute = m }),
-        Triple(ishaHour,    ishaMinute,    { h: Int, m: Int -> ishaHour = h;    ishaMinute = m }),
-        Triple(jummahHour,  jummahMinute,  { h: Int, m: Int -> jummahHour = h;  jummahMinute = m })
+        Triple(fajrHour, fajrMinute, { h: Int, m: Int -> fajrHour = h; fajrMinute = m }),
+        Triple(dhuhrHour, dhuhrMinute, { h: Int, m: Int -> dhuhrHour = h; dhuhrMinute = m }),
+        Triple(asrHour, asrMinute, { h: Int, m: Int -> asrHour = h; asrMinute = m }),
+        Triple(
+            maghribHour,
+            maghribMinute,
+            { h: Int, m: Int -> maghribHour = h; maghribMinute = m }),
+        Triple(ishaHour, ishaMinute, { h: Int, m: Int -> ishaHour = h; ishaMinute = m }),
+        Triple(jummahHour, jummahMinute, { h: Int, m: Int -> jummahHour = h; jummahMinute = m })
     )
 
     Scaffold(
@@ -192,17 +189,15 @@ fun AddUpdateSalahTimingsScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // ── Next prayer info banner ──────────────────────────────────
                 state.takeIf { !it.isLoading && it.nextPrayerName != null && it.nextPrayerTime != null }
                     ?.let {
                         NextPrayerBanner(
-                            prayerName      = it.nextPrayerName!!,
-                            prayerTime      = it.nextPrayerTime!!,
+                            prayerName = it.nextPrayerName!!,
+                            prayerTime = it.nextPrayerTime!!,
                             timeUntilPrayer = it.timeUntilPrayer ?: 0L
                         )
                     }
 
-                // ── Prayer times card ────────────────────────────────────────
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -225,9 +220,9 @@ fun AddUpdateSalahTimingsScreen(
                             prayers.forEachIndexed { index, (hour, minute, onPicked) ->
                                 val meta = prayerMeta[index]
                                 PrayerTimeRow(
-                                    meta     = meta,
-                                    hour     = hour,
-                                    minute   = minute,
+                                    meta = meta,
+                                    hour = hour,
+                                    minute = minute,
                                     onPicked = onPicked
                                 )
                                 if (index < prayers.size - 1) {
@@ -242,7 +237,6 @@ fun AddUpdateSalahTimingsScreen(
                     }
                 }
 
-                // ── Save button ──────────────────────────────────────────────
                 Button(
                     onClick = {
                         viewModel.updatePrayerTimes(
@@ -286,7 +280,6 @@ fun AddUpdateSalahTimingsScreen(
     }
 }
 
-// ─── Next Prayer Banner ───────────────────────────────────────────────────────
 
 @Composable
 private fun NextPrayerBanner(
@@ -296,7 +289,7 @@ private fun NextPrayerBanner(
 ) {
     val formatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
     val formattedTime = formatter.format(java.util.Date(prayerTime))
-    val hours   = TimeUnit.MILLISECONDS.toHours(timeUntilPrayer)
+    val hours = TimeUnit.MILLISECONDS.toHours(timeUntilPrayer)
     val minutes = TimeUnit.MILLISECONDS.toMinutes(timeUntilPrayer) % 60
     val countdown = if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
 
@@ -346,7 +339,6 @@ private fun NextPrayerBanner(
     }
 }
 
-// ─── Prayer Time Row ──────────────────────────────────────────────────────────
 
 @Composable
 private fun PrayerTimeRow(
@@ -364,7 +356,6 @@ private fun PrayerTimeRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon + name
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -384,7 +375,6 @@ private fun PrayerTimeRow(
             )
         }
 
-        // Time picker button
         OutlinedButton(
             onClick = {
                 TimePickerDialog(
@@ -419,7 +409,6 @@ private fun PrayerTimeRow(
     }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 private fun formatTimeFromHourMinute(hour: Int, minute: Int): String {
     val cal = Calendar.getInstance().apply {
@@ -429,7 +418,11 @@ private fun formatTimeFromHourMinute(hour: Int, minute: Int): String {
     return SimpleDateFormat("hh:mm a", Locale.getDefault()).format(cal.time)
 }
 
-private data class PrayerTimeState(val hour: Int, val minute: Int, val onTimeSelected: (Int, Int) -> Unit)
+private data class PrayerTimeState(
+    val hour: Int,
+    val minute: Int,
+    val onTimeSelected: (Int, Int) -> Unit
+)
 
 @Preview(showBackground = true)
 @Composable

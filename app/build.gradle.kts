@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.tv.material)
     implementation(libs.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.credentials)
@@ -82,7 +83,7 @@ dependencies {
 
     //Icons
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation("androidx.compose.material:material:1.7.8")
+    implementation(libs.androidx.compose.material)
 
 
     // Navigation
@@ -94,19 +95,16 @@ dependencies {
 
     //Testing
 
-    // JUnit 4 - The testing framework (REQUIRED)
-    testImplementation("junit:junit:4.13.2")
+    // JUnit 4 - The testing framework
 
     // Kotlin Coroutines Test - For testing StateFlow/Flow (REQUIRED for you)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // AndroidX Test - Core testing utilities
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 
     // Compose UI Testing (for Compose screens)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.10.6")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.10.6")
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.test.manifest)
 
     // QR Scanning (Camera + ML Kit)
     implementation(libs.androidx.camera.camera2)
@@ -120,6 +118,11 @@ dependencies {
 
     //FCM
     implementation(libs.firebase.messaging)
+
+    // Barcode Scanning (Camera + ML Kit)
+    implementation(libs.androidx.camera.camera2.v141)
+    implementation(libs.androidx.camera.lifecycle.v141)
+    implementation(libs.androidx.camera.view.v141)
 
 
 }

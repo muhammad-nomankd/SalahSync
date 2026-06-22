@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import com.durranitech.salahsync.R
 import kotlinx.coroutines.delay
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
 private val SplashBg        = Color(0xFFF0FDF4)
 private val GreenDeep       = Color(0xFF065F46)
 private val GreenPrimary    = Color(0xFF1B8C5E)
@@ -60,18 +59,16 @@ val ImamAccent              = Color(0xFF3FC28A)
 
 @Composable
 fun SplashScreen() {
-    // Entrance animation states
-    var iconVisible    by remember { mutableStateOf(false) }
-    var textVisible    by remember { mutableStateOf(false) }
-    var bottomVisible  by remember { mutableStateOf(false) }
+    var iconVisible by remember { mutableStateOf(false) }
+    var textVisible by remember { mutableStateOf(false) }
+    var bottomVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(100); iconVisible   = true
-        delay(300); textVisible   = true
+        delay(100); iconVisible = true
+        delay(300); textVisible = true
         delay(200); bottomVisible = true
     }
 
-    // Icon entrance
     val iconScale by animateFloatAsState(
         targetValue   = if (iconVisible) 1f else 0.5f,
         animationSpec = tween(600, easing = EaseOutBack),
@@ -83,7 +80,6 @@ fun SplashScreen() {
         label         = "icon_alpha"
     )
 
-    // Text entrance
     val textAlpha by animateFloatAsState(
         targetValue   = if (textVisible) 1f else 0f,
         animationSpec = tween(500),
@@ -95,15 +91,13 @@ fun SplashScreen() {
         label         = "text_offset"
     )
 
-    // Bottom entrance
     val bottomAlpha by animateFloatAsState(
         targetValue   = if (bottomVisible) 1f else 0f,
         animationSpec = tween(500),
         label         = "bottom_alpha"
     )
 
-    // Infinite glow pulse on icon ring
-    val infiniteTransition = rememberInfiniteTransition(label = "glow")
+    val infiniteTransition = rememberInfiniteTransition(label = "glow_animation")
     val glowAlpha by infiniteTransition.animateFloat(
         initialValue  = 0.3f,
         targetValue   = 0.7f,
@@ -133,7 +127,6 @@ fun SplashScreen() {
             ),
         contentAlignment = Alignment.Center
     ) {
-        // ── Blurred background glow blobs ─────────────────────────────────
         Box(
             modifier = Modifier
                 .size(280.dp)
@@ -149,19 +142,16 @@ fun SplashScreen() {
                 .background(GreenPrimary.copy(alpha = 0.12f), CircleShape)
         )
 
-        // ── Center: icon + wordmark ───────────────────────────────────────
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 40.dp)
         ) {
-            // Pulsing outer glow ring → icon card stack
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .scale(iconScale)
                     .alpha(iconAlpha)
             ) {
-                // Outer glow ring (animated)
                 Box(
                     modifier = Modifier
                         .size(120.dp)
@@ -171,7 +161,6 @@ fun SplashScreen() {
                             CircleShape
                         )
                 )
-                // Middle ring
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -180,7 +169,6 @@ fun SplashScreen() {
                             CircleShape
                         )
                 )
-                // Icon card
                 Box(
                     modifier = Modifier
                         .size(76.dp)
@@ -194,7 +182,7 @@ fun SplashScreen() {
                 ) {
                     Image(
                         painter           = painterResource(R.drawable.main_icon),
-                        contentDescription = "SalahSync icon",
+                        contentDescription = "App Logo",
                         modifier          = Modifier.size(48.dp)
                     )
                 }
@@ -202,15 +190,11 @@ fun SplashScreen() {
 
             Spacer(Modifier.height(28.dp))
 
-            // App name + tagline with entrance slide
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .alpha(textAlpha)
-                    .then(
-                        // Simulate translateY with padding trick
-                        Modifier.padding(top = textOffset.dp)
-                    )
+                    .padding(top = textOffset.dp)
             ) {
                 Text(
                     text          = "SalahSync",
@@ -232,7 +216,6 @@ fun SplashScreen() {
             }
         }
 
-        // ── Bottom: pulsing dots + tagline ────────────────────────────────
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -253,11 +236,9 @@ fun SplashScreen() {
     }
 }
 
-// ─── Animated loading dots ────────────────────────────────────────────────────
-
 @Composable
 private fun PulsingDots() {
-    val transition = rememberInfiniteTransition(label = "dots")
+    val transition = rememberInfiniteTransition(label = "loading_dots")
 
     val scales = (0..2).map { i ->
         val scale by transition.animateFloat(
