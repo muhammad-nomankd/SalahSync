@@ -43,7 +43,6 @@ fun MainRoute(paddingValues: PaddingValues) {
     val context = LocalContext.current
 
     val backStack = rememberNavBackStack(Destination.SplashScreen)
-    val imamViewModel: ImamViewModel = hiltViewModel()
     val muqtadiViewModel: MuqtadiViewModel = hiltViewModel()
 
     LaunchedEffect(Unit) {
@@ -118,6 +117,7 @@ fun MainRoute(paddingValues: PaddingValues) {
             }
 
             entry<Destination.ImamDashboardScreen> {
+                val imamViewModel: ImamViewModel = hiltViewModel()
                 ImamMainDashboard(
                     userName = state.value.user?.name ?: "User",
                     userEmail = state.value.user?.email ?: "",
@@ -143,6 +143,7 @@ fun MainRoute(paddingValues: PaddingValues) {
             }
 
             entry<Destination.MasjidScreen> {
+                val imamViewModel: ImamViewModel = hiltViewModel()
                 MasjidScreen(
                     onEditDetails = { /* TODO: navigate to edit screen */ },
                     onCreateMasjid = { backStack.add(Destination.CreateMasjidScreen) },
@@ -168,6 +169,7 @@ fun MainRoute(paddingValues: PaddingValues) {
 
 
             entry<Destination.CreateMasjidScreen> {
+                val imamViewModel: ImamViewModel = hiltViewModel()
                 CreateMasjidScreen(
                     onBackClick = { backStack.removeLastOrNull() },
                     onCreateMasjidClick = { masjid ->
@@ -176,6 +178,8 @@ fun MainRoute(paddingValues: PaddingValues) {
             }
 
             entry<Destination.OnCreateNewAnnouncement> {
+
+                val imamViewModel: ImamViewModel = hiltViewModel()
                 CreateAnnouncementScreen(
                     state = imamViewModel.uiState.collectAsStateWithLifecycle().value,
                     onNavigateBack = { backStack.removeLastOrNull() },
